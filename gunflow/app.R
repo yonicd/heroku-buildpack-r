@@ -10,7 +10,7 @@ Sys.setenv(MAPBOX_ACCESS_TOKEN=read.dcf('www/MYTOKEN')[1])
 
 states <- geojsonio::geojson_read('www/us-states.geojson', what = "sp")
 
-load('www/gun_mat.rda')
+load('www/gun_mat_heroku.rda')
 
 whereami <- rgeolocate::ip_api(httr::content(httr::GET('https://api.ipify.org?format=json'))[1])
 
@@ -30,9 +30,9 @@ network_dat <- net_dat(gun_mat)
 
 tot <- scatter_fun(gun_mat)
 
-load('www/gun_ranking.rda')
+load('www/gun_ranking_heroku.rda')
 
-load('www/atf_data.rda')
+load('www/atf_data_heroku.rda')
 
 tot <- tot%>%mutate(state=as.character(state))%>%left_join(gun_ranking,by=c('year','state'))
 
