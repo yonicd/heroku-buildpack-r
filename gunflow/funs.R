@@ -106,4 +106,3 @@ scatter_fun <- function(gun_mat){
   
   tot
 }
-
