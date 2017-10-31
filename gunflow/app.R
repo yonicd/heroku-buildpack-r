@@ -1,4 +1,4 @@
-source('funs.R')
+source('www/funs.R')
 
 plot_size = 16
 
