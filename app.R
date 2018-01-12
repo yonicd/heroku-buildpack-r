@@ -61,8 +61,8 @@ shinyApp(ui =   fluidPage(
                  hr(),
                  br(),
                  h4('Reference'),
-                 p('Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657,'),
-                 tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'https://doi.org/10.1093/bioinformatics/btx657')
+                 p('Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657,',
+                 tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'https://doi.org/10.1093/bioinformatics/btx657'))
     ),
     
     mainPanel(
@@ -308,22 +308,37 @@ server = function(input, output,session) {
     #l=l[!l=='']
     l=data.frame(Parameter=names(l),Value=do.call('rbind',l),row.names = NULL,stringsAsFactors = F)
     l[which(l$Value==''),2]='NULL'
-    paramTbl=print(xtable::xtable(l),type = 'html',include.rownames=FALSE,print.results = F,html.table.attributes = c('border=0'))
+
+    #paramTbl=print(xtable::xtable(l),type = 'html',include.rownames=FALSE,print.results = F,html.table.attributes = c('border=0'))
+    
+    ht <- as_hux(l,add_colnames = TRUE)
+    bold(ht)[1,]  <- TRUE
+    bottom_border(ht)[1,] <- 1
+    font_size(ht) <-  10
+    position(ht) <- 'left'
+    paramTbl <- to_html(ht)
     
     
     h$width='100%'
     h$height='800px'
-    s<-tags$div(style="position: relative; bottom: 5px;",
+    
+    tp <- tags$div(style="position: relative; top: 5px;",
+                   tags$p(
+                     HTML('Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657.
+                     <a href="https://doi.org/10.1093/bioinformatics/btx657" target="_blank">https://doi.org/10.1093/bioinformatics/btx657</a>. 
+                     <br/><b>Try shinyHeatmaply for free on <a href="https://aqueous-crag-17834.herokuapp.com/" target="_blank">Heroku</a></b>')
+                     )
+                   )
+    
+    btm<-tags$div(style="position: relative; bottom: 5px;",
+                tags$br(),
+                tags$h4('heatmaply Parameter Settings'),
                 HTML(paramTbl),
                 tags$br(),
                 tags$em('This heatmap visualization was created using',
                         tags$a(href="https://github.com/yonicd/shinyHeatmaply/",target="_blank",'shinyHeatmaply'),
                         Sys.time()
-                ),
-                tags$br(),
-                tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657. https://doi.org/10.1093/bioinformatics/btx657'),
-                tags$br(),
-                tags$a(href="https://aqueous-crag-17834.herokuapp.com/",target="_blank",'Visit the app on heroku')
+                )
     )
     
     output$downloadData <- downloadHandler(
@@ -333,7 +348,14 @@ server = function(input, output,session) {
       content = function(file) {
         libdir <- paste(tools::file_path_sans_ext(basename(file)),"_files", sep = "")
         
-        htmltools::save_html(htmltools::browsable(htmltools::tagList(h,s)),file=file,libdir = libdir)
+        htmltools::save_html(
+          htmltools::browsable(
+              htmltools::tagList(tp,h,btm)
+            ),
+          file=file,
+          libdir = libdir
+          )
+        
         if (!htmlwidgets:::pandoc_available()) {
           stop("Saving a widget with selfcontained = TRUE requires pandoc. For details see:\n", 
                "https://github.com/rstudio/rmarkdown/blob/master/PANDOC.md")

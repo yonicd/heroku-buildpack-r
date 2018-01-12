@@ -4,7 +4,7 @@
 #
 
 my_packages = c("plotly","viridis","jsonlite","RColorBrewer",
-                "readxl","DT","xtable","htmltools","htmlwidgets",
+                "readxl","DT","huxtable","htmltools","htmlwidgets",
                 "shinyHeatmaply","dplyr","heatmaply")
 
 install_if_missing = function(p) {
