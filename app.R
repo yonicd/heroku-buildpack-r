@@ -57,7 +57,8 @@ shinyApp(ui =   fluidPage(
                                   sliderInput('column_text_angle','Column Text Angle',value = 45,min=0,max=180),
                                   sliderInput("l", "Set Margin Width", min = 0, max = 200, value = 130),
                                   sliderInput("b", "Set Margin Height", min = 0, max = 200, value = 40)
-                 )
+                 ),
+                 tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'Reference')
     ),
     
     mainPanel(
@@ -312,10 +313,12 @@ server = function(input, output,session) {
                 HTML(paramTbl),
                 tags$em('This heatmap visualization was created using',
                         tags$a(href="https://github.com/yonicd/shinyHeatmaply/",target="_blank",'shinyHeatmaply'),
-                        ', visit the app on ',
-                        tags$a(href="https://aqueous-crag-17834.herokuapp.com/",target="_blank",'heroku'),
                         Sys.time()
-                )
+                ),
+                tags$br(),
+                tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'Reference: https://doi.org/10.1093/bioinformatics/btx657'),
+                tags$br(),
+                tags$a(href="https://aqueous-crag-17834.herokuapp.com/",target="_blank",'Visit the app on heroku')
     )
     
     output$downloadData <- downloadHandler(

@@ -15,4 +15,5 @@ install_if_missing = function(p) {
     cat(paste("Skipping already installed package:", p, "\n"))
   }
 }
-invisible(sapply(my_packages, install_if_missing))
+
+#invisible(sapply(my_packages, install_if_missing))
