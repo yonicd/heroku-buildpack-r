@@ -58,7 +58,11 @@ shinyApp(ui =   fluidPage(
                                   sliderInput("l", "Set Margin Width", min = 0, max = 200, value = 130),
                                   sliderInput("b", "Set Margin Height", min = 0, max = 200, value = 40)
                  ),
-                 tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'Reference')
+                 hr(),
+                 br(),
+                 h4('Reference'),
+                 p('Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657,'),
+                 tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'https://doi.org/10.1093/bioinformatics/btx657')
     ),
     
     mainPanel(
@@ -311,12 +315,13 @@ server = function(input, output,session) {
     h$height='800px'
     s<-tags$div(style="position: relative; bottom: 5px;",
                 HTML(paramTbl),
+                tags$br(),
                 tags$em('This heatmap visualization was created using',
                         tags$a(href="https://github.com/yonicd/shinyHeatmaply/",target="_blank",'shinyHeatmaply'),
                         Sys.time()
                 ),
                 tags$br(),
-                tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'Reference: https://doi.org/10.1093/bioinformatics/btx657'),
+                tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657. https://doi.org/10.1093/bioinformatics/btx657'),
                 tags$br(),
                 tags$a(href="https://aqueous-crag-17834.herokuapp.com/",target="_blank",'Visit the app on heroku')
     )
