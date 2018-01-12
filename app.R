@@ -312,6 +312,8 @@ server = function(input, output,session) {
                 HTML(paramTbl),
                 tags$em('This heatmap visualization was created using',
                         tags$a(href="https://github.com/yonicd/shinyHeatmaply/",target="_blank",'shinyHeatmaply'),
+                        ', visit the app on ',
+                        tags$a(href="https://aqueous-crag-17834.herokuapp.com/",target="_blank",'heroku'),
                         Sys.time()
                 )
     )
