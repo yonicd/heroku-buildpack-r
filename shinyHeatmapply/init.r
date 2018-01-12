@@ -16,13 +16,3 @@ install_if_missing = function(p) {
   }
 }
 invisible(sapply(my_packages, install_if_missing))
-
-# my_gh_packages = c("jsTree")
-# 
-# install_if_missing_gh = function(p) {
-#   if (p %in% rownames(installed.packages()) == FALSE) {
-#     devtools::install_github('metrumresearchgroup/jsTree')
-#   }
-# }
-
-#invisible(sapply(my_gh_packages, install_if_missing_gh))

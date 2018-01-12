@@ -21,8 +21,6 @@ d=d[unlist(lapply(d,function(d.in) eval(parse(text=paste0('ncol(as.data.frame(da
 d=d[-which(d=='mtcars')]
 d=c('mtcars',d)
 
-#shiny::runApp(appDir = getwd())
-
 shiny::runApp(
   appDir = getwd(),
   host = '0.0.0.0',
