@@ -3,20 +3,6 @@
 # Example R code to install packages if not already installed
 #
 
-library(shiny)
-library(plotly)
-library(viridis)
-library(jsonlite)
-library(RColorBrewer)
-library(readxl)
-library(DT)
-library(xtable)
-library(htmltools)
-library(htmlwidgets)
-library(shinyHeatmaply)
-library(dplyr)
-library(heatmaply)
-
 my_packages = c("plotly","viridis","jsonlite","RColorBrewer",
                 "readxl","DT","xtable","htmltools","htmlwidgets",
                 "shinyHeatmaply","dplyr","heatmaply")
