@@ -1,372 +1,326 @@
-shinyApp(ui =   fluidPage(
+shinyApp(ui =   bootstrapPage(
+  h3('Firearms Sourced and Recovered in the United States and Territories 2010-2016'),
+  p('Jonathan Sidi: ',
+    shiny::a(href="https://yonicd.netlify.com/",'Home Site',target="_blank"),
+    '| ',
+    shiny::a(href="https://twitter.com/yoniceedee",'Twitter',target="_blank")),
+  p('Sources: ',
+    shiny::a(href="https://yonicd.netlify.com/post/2017-11-07-gunflow/",'Blog post',target="_blank"),
+    '| ',
+    shiny::a(href="https://www.atf.gov/resource-center/firearms-trace-data-2016",'Bureau of Alcohol, Firearms and Explosives',target="_blank"),
+    ': ',
+    shiny::a(href="https://www.atf.gov/docs/undefined/sourcerecoverybystatecy2016xlsx/download",'2016 Excel Spreadsheet',target="_blank"),
+    '| ',
+    shiny::a(href="http://smartgunlaws.org/scorecard/",'smartgunlaws.org',target="_blank"),
+    '| ',
+    shiny::a(href="https://raw.githubusercontent.com/rstudio/leaflet/gh-pages/json/us-states.geojson",'geosjson file',target="_blank"),
+    '| ',
+    shiny::a(href="https://www2.census.gov/programs-surveys/popest/tables/2010-2016/state/totals/",'US Census state population estimates',target="_blank")
+  ),
+  hr(),
+  h4('Interstate Firearms flow, Choose a state in the drop down menu to the left and the direction of flow'),
   
-  sidebarLayout(
-    sidebarPanel(width=4,
-                 h4('Data Selection'),
-                 fileInput(inputId="mydata", label = "Import Data",multiple = T),
-                 uiOutput('data'),
-                 checkboxInput('showSample','Subset Data'),
-                 conditionalPanel('input.showSample',uiOutput('sample')),
-                 hr(),h4('Data Preprocessing'),
-                 column(width=4,selectizeInput('transpose','Transpose',choices = c('No'=FALSE,'Yes'=TRUE),selected = FALSE)),
-                 column(width=4,selectizeInput("transform_fun", "Transform", c(Identity=".",Sqrt='sqrt',log='log',Scale='scale',Normalize='normalize',Percentize='percentize',"Missing values"='is.na10', Correlation='cor'),selected = '.')),
-                 uiOutput('annoVars'),
-                 
-                 br(),hr(),h4('Row dendrogram'),
-                 column(width=6,selectizeInput("distFun_row", "Distance method", c(Euclidean="euclidean",Maximum='maximum',Manhattan='manhattan',Canberra='canberra',Binary='binary',Minkowski='minkowski'),selected = 'euclidean')),
-                 column(width=6,selectizeInput("hclustFun_row", "Clustering linkage", c(Complete= "complete",Single= "single",Average= "average",Mcquitty= "mcquitty",Median= "median",Centroid= "centroid",Ward.D= "ward.D",Ward.D2= "ward.D2"),selected = 'complete')),
-                 column(width=12,sliderInput("r", "Number of Clusters", min = 1, max = 15, value = 2)),    
-                 #column(width=4,numericInput("r", "Number of Clusters", min = 1, max = 20, value = 2, step = 1)),   
-                 
-                 br(),hr(),h4('Column dendrogram'),
-                 column(width=6,selectizeInput("distFun_col", "Distance method", c(Euclidean="euclidean",Maximum='maximum',Manhattan='manhattan',Canberra='canberra',Binary='binary',Minkowski='minkowski'),selected = 'euclidean')),
-                 column(width=6,selectizeInput("hclustFun_col", "Clustering linkage", c(Complete= "complete",Single= "single",Average= "average",Mcquitty= "mcquitty",Median= "median",Centroid= "centroid",Ward.D= "ward.D",Ward.D2= "ward.D2"),selected = 'complete')),
-                 column(width=12,sliderInput("c", "Number of Clusters", min = 1, max = 15, value = 2)),
-                 #column(width=4,numericInput("c", "Number of Clusters", min = 1, max = 20, value = 2, step = 1)),    
-                 
-                 br(),hr(),  h4('Additional Parameters'),
-                 
-                 column(3,checkboxInput('showColor','Color')),
-                 column(3,checkboxInput('showMargin','Layout')),
-                 column(3,checkboxInput('showDendo','Dendrogram')),
-                 hr(),
-                 conditionalPanel('input.showColor==1',
-                                  hr(),
-                                  h4('Color Manipulation'),
-                                  uiOutput('colUI'),
-                                  sliderInput("ncol", "Set Number of Colors", min = 1, max = 256, value = 256),
-                                  checkboxInput('colRngAuto','Auto Color Range',value = T),
-                                  conditionalPanel('!input.colRngAuto',uiOutput('colRng'))
-                 ),
-                 
-                 conditionalPanel('input.showDendo==1',
-                                  hr(),
-                                  h4('Dendrogram Manipulation'),
-                                  selectInput('dendrogram','Dendrogram Type',choices = c("both", "row", "column", "none"),selected = 'both'),
-                                  selectizeInput("seriation", "Seriation", c(OLO="OLO",GW="GW",Mean="mean",None="none"),selected = 'OLO'),
-                                  sliderInput('branches_lwd','Dendrogram Branch Width',value = 0.6,min=0,max=5,step = 0.1)
-                 ),             
-                 
-                 conditionalPanel('input.showMargin==1',
-                                  hr(),
-                                  h4('Widget Layout'),
-                                  column(4,textInput('main','Title','')),
-                                  column(4,textInput('xlab','X Title','')),
-                                  column(4,textInput('ylab','Y Title','')),
-                                  sliderInput('row_text_angle','Row Text Angle',value = 0,min=0,max=180),
-                                  sliderInput('column_text_angle','Column Text Angle',value = 45,min=0,max=180),
-                                  sliderInput("l", "Set Margin Width", min = 0, max = 200, value = 130),
-                                  sliderInput("b", "Set Margin Height", min = 0, max = 200, value = 40)
-                 ),
-                 hr(),
-                 br(),
-                 h4('Reference'),
-                 p('Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657,',
-                 tags$a(href="https://doi.org/10.1093/bioinformatics/btx657",target="_blank",'https://doi.org/10.1093/bioinformatics/btx657'))
-    ),
-    
-    mainPanel(
-      tabsetPanel(
-        tabPanel("Heatmaply",
-                 tags$a(id = 'downloadData', class = paste("btn btn-default shiny-download-link",'mybutton'), href = "", target = "_blank", download = NA, icon("clone"), 'Download Heatmap as HTML'),
-                 tags$head(tags$style(".mybutton{color:white;background-color:blue;} .skin-black .sidebar .mybutton{color: green;}") ),
-                 plotlyOutput("heatout",height='600px')
-        ),
-        tabPanel("Data",
-                 DT::dataTableOutput('tables')
-        )
-      )
-    )
-  )
+  tags$style(type = "text/css", "html, body {width:100%;height:80%}"),
+  leaflet::leafletOutput('leaf',height = '500px'),
+  absolutePanel(top = 240, left = 10,
+                shiny::selectInput('year','Select Year',choices = 2016:2011,selected = 2016,width = '90%'),
+                shiny::selectInput('thisstate','Select state',choices = states$name,selected = thisstate,width = '90%'),
+                shiny::radioButtons('type','Direction',c('Inflow','Outflow'),'Inflow',inline = TRUE),
+                shiny::radioButtons('scale','Scale Type',c('National','State'),inline=TRUE)
+  ),
+  slickR::slickROutput('slick',width='100%',height='400px')
 ),
 
 server = function(input, output,session) {
   
-  TEMPLIST<-new.env()
-  TEMPLIST$d<-d
-  #Annotation Variable UI ----
-  observeEvent(data.sel(),{
-    output$annoVars<-renderUI({
-      data.in=data.sel()
-      NM=NULL
+  datin <- shiny::eventReactive(c(input$thisstate,input$type,input$year),{
+    
+    gun_mat1 <- switch(input$type,
+                       Inflow={
+                         gun_mat%>%
+                           dplyr::filter(year==input$year)%>%
+                           dplyr::group_by(to)%>%
+                           dplyr::mutate(value1=ifelse(to==from,NA,value),pct=100*value1/sum(value1,na.rm = TRUE))%>%
+                           dplyr::filter(to==input$thisstate)%>%
+                           dplyr::rename(state=from)       
+                       },
+                       Outflow={
+                         gun_mat%>%
+                           dplyr::filter(year==input$year)%>%
+                           dplyr::group_by(from)%>%
+                           dplyr::mutate(value1=ifelse(to==from,NA,value),pct=100*value1/sum(value1,na.rm = TRUE))%>%
+                           dplyr::filter(from==input$thisstate)%>%
+                           dplyr::rename(state=to)
+                       })
+    
+    mydata <- states@data   
+    mydata <- mydata%>%
+      rename(state=name)%>%
+      mutate(state=as.character(state))%>%
+      left_join(gun_mat1%>%ungroup%>%select(state,value1,value,pct),by='state')
+    
+    states@data$pct <- mydata$pct
+    states@data$level <- mydata$value1
+    states@data$value <- mydata$value
+    states@data$density <- NULL
+    
+    states
+  })
+  
+  observeEvent(c(datin(),input$scale),{
+    
+    d <- switch(input$scale,
+                National={
+                  seq(0,35)
+                },
+                State={
+                  datin()$pct
+                })
+    
+    pal <- colorNumeric(
+      palette = "RdYlBu",
+      domain = d,na.color = 'black',reverse = TRUE)
+    
+    
+    output$leaf <- leaflet::renderLeaflet({
       
-      if(any(sapply(data.in,class)=='factor')){
-        NM=names(data.in)[which(sapply(data.in,class)=='factor')]  
-      } 
-      column(width=4,
-             selectizeInput('annoVar','Annotation',choices = names(data.in),selected=NM,multiple=T,options = list(placeholder = 'select columns',plugins = list("remove_button")))
-      )
+      df <- datin()
+      
+      m <- leaflet(df) %>%
+        setView(-96, 37.8, 4) %>%
+        addProviderTiles("MapBox", options = providerTileOptions(
+          id = "mapbox.light",
+          accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
+      
+      
+      labels <- switch (input$type,
+                        Inflow={
+                          sprintf(
+                            "Of the %s Out of State Firearms Recovered in <strong>%s</strong><br/>%g%% of them originating from <strong>%s</strong><br/>Total Firearms Recovered in <strong>%s</strong> : %s",
+                            sum(df$level,na.rm = TRUE),
+                            input$thisstate,
+                            round(df$pct,2),
+                            states$name,
+                            input$thisstate,
+                            sum(df$value,na.rm = TRUE)
+                          )
+                        },
+                        Outflow={
+                          sprintf(
+                            'Of the %s Out of State Firearms Originating from <strong>%s</strong><br/>%g%% were Recovered in <strong>%s</strong><br/>Total Firearms Originating from <strong>%s</strong> : %s',
+                            sum(df$level,na.rm = TRUE),
+                            input$thisstate,
+                            round(df$pct,2),
+                            states$name,
+                            input$thisstate,
+                            sum(df$value,na.rm = TRUE)
+                          ) 
+                        }
+      )%>% lapply(htmltools::HTML)
+      
+      m %>% addPolygons(
+        fillColor = ~pal(pct),
+        weight = 2,
+        smoothFactor = 0.2,
+        stroke=FALSE,
+        opacity = 1,
+        color = "white",
+        dashArray = "3",
+        fillOpacity = 0.7,
+        highlight = highlightOptions(
+          weight = 5,
+          color = "#666",
+          dashArray = "",
+          fillOpacity = 1,
+          bringToFront = TRUE),
+        label = labels,
+        labelOptions = labelOptions(
+          style = list("font-weight" = "normal", padding = "3px 8px"),
+          textsize = "15px",
+          direction = "auto"))%>% 
+        addLegend(pal = pal, values = switch(input$scale,National=0:35,State=~pct), opacity = 0.7, title = 'Percent',
+                  position = "bottomright",na.label = 'Selected State') 
+      
+    })  
+    
+    output$tbl <- renderDataTable({datin()@data})
+    
+    output$inset_plot <- renderPlot({
+      
+      idx <- which(net_flow$state%in%c(input$thisstate))
+      
+      net_plot +
+        geom_segment(x= idx, 
+                     xend=idx,
+                     y=ceiling(max(net_flow$ratio_net))+5,
+                     yend=pmax(0,net_flow$ratio_net[idx]), 
+                     arrow = arrow(length = unit(0.5, "cm")))
     })
     
-    #Sampling UI ----  
-    output$sample<-renderUI({
-      list(
-        column(4,textInput(inputId = 'setSeed',label = 'Seed',value = sample(1:10000,1))),
-        column(4,numericInput(inputId = 'selRows',label = 'Number of Rows',min=1,max=pmin(500,nrow(data.sel())),value = pmin(500,nrow(data.sel())))),
-        column(4,selectizeInput('selCols','Columns Subset',choices = names(data.sel()),multiple=T))
-      )
-    })
-  })
-  
-  #Data Selection UI ----
-  output$data=renderUI({
-    if(!is.null(input$mydata)) TEMPLIST$d=c(input$mydata$name,TEMPLIST$d)
-    selData=head(TEMPLIST$d,1)
-    selectInput("data","Select Data",TEMPLIST$d,selected = selData)
   })
   
   
-  #Color Pallete UI ----
-  output$colUI<-renderUI({
+  # shiny::observeEvent(c(input$leaf_shape_mouseover),{
+  #   hovering <- input$leaf_shape_mouseover
+  #   state.names <- as.character(states@data$name)
+  #   hover.state <- state.names[which(sapply(states@polygons,function(x) point.in.polygon(hovering$lng,hovering$lat,x@Polygons[[1]]@coords[,1],x@Polygons[[1]]@coords[,2]))==1)]
+  #   
+  
+  
+  atf_plot_base <- eventReactive(input$thisstate,{
+    atf_marginal <- atf_data%>%
+      filter(year==2016)%>%
+      filter(base_rate>1|state==input$thisstate)%>%
+      mutate(chosen=state==input$thisstate)
     
-    colSel='Vidiris'
-    if(input$transform_fun=='cor') colSel='RdBu'
-    if(input$transform_fun=='is.na10') colSel='grey.colors'
-    
-    selectizeInput(inputId ="pal", label ="Select Color Palette",
-                   choices = c('Vidiris (Sequential)'="viridis",
-                               'Magma (Sequential)'="magma",
-                               'Plasma (Sequential)'="plasma",
-                               'Inferno (Sequential)'="inferno",
-                               'Magma (Sequential)'="magma",
-                               'Magma (Sequential)'="magma",
-                               
-                               'RdBu (Diverging)'="RdBu",
-                               'RdYlBu (Diverging)'="RdYlBu",
-                               'RdYlGn (Diverging)'="RdYlGn",
-                               'BrBG (Diverging)'="BrBG",
-                               'Spectral (Diverging)'="Spectral",
-                               
-                               'BuGn (Sequential)'='BuGn',
-                               'PuBuGn (Sequential)'='PuBuGn',
-                               'YlOrRd (Sequential)'='YlOrRd',
-                               'Heat (Sequential)'='heat.colors',
-                               'Grey (Sequential)'='grey.colors'),
-                   selected=colSel)
+    atf_data%>%
+      ggplot(aes(x=year,y=base_rate,group=state.abb))+
+      geom_line()+
+      geom_point(data=atf_marginal)+
+      ggrepel::geom_label_repel(aes(label=state.abb,fill=chosen),
+                                data=atf_marginal,
+                                show.legend = FALSE,
+                                segment.alpha = .3,
+                                segment.colour = 'blue')+
+      facet_wrap(~Division)+
+      scale_x_continuous(breaks=2010:2016,limits = c(2010,2017))+
+      theme_minimal()+
+      labs(title = 'Rate of Firearm Registration Per 100 individuals (age>17,Base year 2010)',
+           subtitle = 'Label indicates states in 2016 with rate of change above 100% (Blue is selected state)',
+           caption = 'Source: Bureau of Alcohol, Firearms and Explosives',
+           x = 'Year',
+           y = 'Rate of Change (Base year 2010)')
   })
   
-  #Manual Color Range UI ----
-  output$colRng=renderUI({
-    if(!is.null(data.sel())) {
-      rng=range(data.sel(),na.rm = TRUE)
-    }else{
-      rng=range(mtcars) # TODO: this should probably be changed
-    }
-    # sliderInput("colorRng", "Set Color Range", min = round(rng[1],1), max = round(rng[2],1), step = .1, value = rng)  
-    n_data = nrow(data.sel())
+  atf_plot <- eventReactive(input$thisstate,{
     
-    min_min_range = ifelse(input$transform_fun=='cor',-1,-Inf)
-    min_max_range = ifelse(input$transform_fun=='cor',1,rng[1])
-    min_value = ifelse(input$transform_fun=='cor',-1,rng[1])
+    this_atf <- atf_data
     
-    max_min_range = ifelse(input$transform_fun=='cor',-1,rng[2])
-    max_max_range = ifelse(input$transform_fun=='cor',1,Inf)
-    max_value = ifelse(input$transform_fun=='cor',1,rng[2])
+    if(input$thisstate!='Wyoming')
+      this_atf <- this_atf%>%filter(state!='Wyoming')
     
-    a_good_step = 0.1 # (max_range-min_range) / n_data
+    this_atf$chosen <- this_atf$state==input$thisstate
     
-    list(
-      numericInput("colorRng_min", "Set Color Range (min)", value = min_value, min = min_min_range, max = min_max_range, step = a_good_step),
-      numericInput("colorRng_max", "Set Color Range (max)", value = max_value, min = max_min_range, max = max_max_range, step = a_good_step)
+    atf_marginal <- this_atf%>%
+      filter(year==2016)%>%
+      filter(rate>3|state==input$thisstate)%>%
+      mutate(chosen=state==input$thisstate)
+    
+    this_atf%>% 
+      ggplot(aes(x=year,y=rate,group=state.abb))+
+      geom_line()+
+      ggrepel::geom_label_repel(aes(label=state.abb,fill=chosen),
+                                data=atf_marginal,
+                                show.legend = FALSE,
+                                segment.alpha = .3,
+                                segment.colour = 'blue')+
+      facet_wrap(~Division)+
+      scale_x_continuous(breaks=2010:2016,limits = c(2010,2017))+
+      theme_minimal()+
+      labs(title = 'Rate of Firearm Registration Per 100 individuals (age>17)',
+           subtitle = 'Label indicates states in 2016 with rate above 3 Firearms per 100 (Blue is selected state)',
+           caption = 'Source: Bureau of Alcohol, Firearms and Explosives',
+           x = 'Year',
+           y = 'Rate per 100 Individuals (age>17)')
+  })
+  
+  power_plot <- eventReactive(c(input$year,input$thisstate),{
+    
+    this_net_dat <- network_dat[[input$year]]
+    
+    this_net_dat$alpha_pow$chosen <- as.numeric((this_net_dat$alpha_pow$state==input$thisstate))
+    
+    this_net_dat$alpha_pow%>%
+      ggplot(aes(x=neg,y=pos,label=state,fill=Division))+
+      geom_hline(yintercept = 0,linetype=2) + 
+      geom_vline(xintercept = 0,linetype=2) + 
+      ggrepel::geom_label_repel()+theme_minimal(base_size = plot_size)+
+      geom_point(aes(size=chosen),show.legend = FALSE,data=this_net_dat$alpha_pow) +
+      scale_y_continuous(limits = c(-4,4)) +
+      scale_x_continuous(limits = c(-4,4)) + 
+      labs(x='(<== WEAKER | STRONGER ==>)\nLevel of Antagonistic Relations',
+           y='Level of Cooperative Relations\n(<== STRONGER | WEAKER ==>)',
+           title = "State Power Centrality of Interstate Firearms Directed Graph",
+           subtitle=paste(c("Cooperative Relations: If ego has neighbors who have many connections to others,",
+                            "making ego more powerful, because it has the 'right' connections.",
+                            "\nAntagonistic Relations: If ego has weak neighbors it increases the ego centrality power"),
+                          collapse='\n'),
+           caption = sprintf("Source: Bureau of Alcohol, Firearms and Explosives (%s)",input$year))
+  })
+  
+  
+  network_plot <- eventReactive(c(input$year,input$thisstate),{
+    
+    this_net_flow <- net_flow%>%filter(year==input$year)
+    
+    this_net_flow$state <- factor(this_net_flow$state,levels = this_net_flow$state)
+    
+    idx1 <- which(this_net_flow$state==c(input$thisstate))
+    
+    this_net_flow$chosen <- ifelse(this_net_flow$state==input$thisstate,'State Selected','State Not Selected')
+    
+    this_net_plot <- ggplot2::ggplot(this_net_flow,
+                                     ggplot2::aes(x=state,y=ratio_net,
+                                                  fill=cut(ratio_net,
+                                                           breaks = 10,
+                                                           include.lowest = TRUE)))+
+      ggplot2::geom_bar(stat='identity')+
+      scale_fill_brewer(palette = "RdYlBu",direction = -1,name=NULL)+
+      theme_minimal(base_size = plot_size)+
+      labs(title='Net Firearm Flow per 100 Firearms Between States',
+           subtitle='High is Net Exporter, Low is Net Importer',
+           caption = sprintf("Source: Bureau of Alcohol, Firearms and Explosives (%s)",input$year),
+           y='Net Ratio per 100 Firearms',x='State')+
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle=90),legend.position = 'bottom')
+    
+    this_net_plot +
+      geom_segment(x= idx1, 
+                   xend=idx1,
+                   y=ceiling(max(this_net_flow$ratio_net))+5,
+                   yend=pmax(0,this_net_flow$ratio_net[idx1]), 
+                   arrow = arrow(length = unit(0.5, "cm")))
+  })
+  
+  
+  scatter_plot <- eventReactive(c(input$year,input$thisstate),{
+    this_tot <- tot%>%ungroup%>%filter(year==input$year)
+    
+    this_tot$chosen=as.numeric((this_tot$state==input$thisstate))  
+    
+    this_tot%>%
+      ggplot(aes(x=from_pct,y=to_pct,fill=cut(within_pct,5,include.lowest = TRUE)))+
+      ggrepel::geom_label_repel(aes(label=state_grade),alpha=.7)+
+      scale_fill_brewer(palette = "RdYlBu",direction = -1,name='Internal Rate')+
+      geom_point(aes(size=chosen),show.legend = FALSE,data=this_tot)+
+      theme_minimal(base_size = plot_size)+
+      labs(title='Inflow, Outflow and Internal Firearms Rate per 100',
+           subtitle='Label Attributes: Higher grades reflect stricter gunlaws, * reflects state with background checks',
+           caption = sprintf("Sources: Bureau of Alcohol, Firearms and Explosives (%s)\n Law Center To Prevent Gun Violence",input$year),
+           x='Outflow Rate',y='Inflow Rate')
+  })
+  
+  
+  
+  
+  inset_plot <- eventReactive(c(input$year,input$thisstate),{
+    
+    plotsToSVG=list(
+      svglite::xmlSVG({show(atf_plot())},standalone=TRUE,width = 12),
+      svglite::xmlSVG({show(atf_plot_base())},standalone=TRUE,width = 12),
+      svglite::xmlSVG({show(network_plot())},standalone=TRUE,width = 12),
+      svglite::xmlSVG({show(scatter_plot())},standalone=TRUE,width = 12),
+      svglite::xmlSVG({show(network_dat[[input$year]]$network_plot)},standalone=TRUE,width = 12),
+      svglite::xmlSVG({show(power_plot())},standalone=TRUE,width = 12)
     )
     
+    sapply(plotsToSVG,function(sv){paste0("data:image/svg+xml;utf8,",as.character(sv))})
+    
   })
   
-  #Import/Select Data ----
-  data.sel=eventReactive(input$data,{
-    if(input$data%in%d){
-      eval(parse(text=paste0('data.in=as.data.frame(datasets::',input$data,')')))
-    }else{
-      data.in=importSwitch(input$mydata[input$mydata$name%in%input$data,])
-    }
-    data.in=as.data.frame(data.in)
-    # data.in=data.in[,sapply(data.in,function(x) class(x))%in%c('numeric','integer')] # no need for this
-    return(data.in)
-  })  
-  
-  #Building heatmaply ----
-  interactiveHeatmap<- reactive({
-    data.in=data.sel()
-    if(input$showSample){
-      if(!is.null(input$selRows)){
-        set.seed(input$setSeed)
-        if((input$selRows >= 2) & (input$selRows < nrow(data.in))){
-          # if input$selRows == nrow(data.in) then we should not do anything (this save refreshing when clicking the subset button)
-          if(length(input$selCols)<=1) data.in=data.in[sample(1:nrow(data.in),pmin(500,input$selRows)),]
-          if(length(input$selCols)>1) data.in=data.in[sample(1:nrow(data.in),pmin(500,input$selRows)),input$selCols]
-        }
-      }
-    }
-    # ss_num = sapply(data.in,function(x) class(x)) %in% c('numeric','integer') # in order to only transform the numeric values
-    
-    if(length(input$annoVar)>0){
-      if(all(input$annoVar%in%names(data.in))) 
-        data.in <- data.in%>%mutate_at(funs(factor),.vars=vars(input$annoVar))
-    } 
-    
-    ss_num =  sapply(data.in, is.numeric) # in order to only transform the numeric values
-    
-    if(input$transpose) data.in=t(data.in)
-    if(input$transform_fun!='.'){
-      if(input$transform_fun=='is.na10'){
-        updateCheckboxInput(session = session,inputId = 'showColor',value = T)
-        data.in[, ss_num]=is.na10(data.in[, ss_num])
-      } 
-      if(input$transform_fun=='cor'){
-        updateCheckboxInput(session = session,inputId = 'showColor',value = T)
-        updateCheckboxInput(session = session,inputId = 'colRngAuto',value = F)
-        data.in=cor(data.in[, ss_num],use = "pairwise.complete.obs")
-      }
-      if(input$transform_fun=='log') data.in[, ss_num]= apply(data.in[, ss_num],2,log)
-      if(input$transform_fun=='sqrt') data.in[, ss_num]= apply(data.in[, ss_num],2,sqrt) 
-      if(input$transform_fun=='normalize') data.in=heatmaply::normalize(data.in)
-      if(input$transform_fun=='scale') data.in[, ss_num] = scale(data.in[, ss_num])
-      if(input$transform_fun=='percentize') data.in=heatmaply::percentize(data.in)
-    } 
-    
-    
-    
-    if(!is.null(input$tables_true_search_columns)) 
-      data.in=data.in[activeRows(input$tables_true_search_columns,data.in),]
-    if(input$colRngAuto){
-      ColLimits=NULL 
-    }else{
-      ColLimits=c(input$colorRng_min, input$colorRng_max)
-    }
-    
-    distfun_row = function(x) dist(x, method = input$distFun_row)
-    distfun_col =  function(x) dist(x, method = input$distFun_col)
-    
-    hclustfun_row = function(x) hclust(x, method = input$hclustFun_row)
-    hclustfun_col = function(x) hclust(x, method = input$hclustFun_col)
-    
-    p <- heatmaply(data.in,
-                   main = input$main,xlab = input$xlab,ylab = input$ylab,
-                   row_text_angle = input$row_text_angle,
-                   column_text_angle = input$column_text_angle,
-                   dendrogram = input$dendrogram,
-                   branches_lwd = input$branches_lwd,
-                   seriate = input$seriation,
-                   colors=eval(parse(text=paste0(input$pal,'(',input$ncol,')'))),
-                   distfun_row =  distfun_row,
-                   hclustfun_row = hclustfun_row,
-                   distfun_col = distfun_col,
-                   hclustfun_col = hclustfun_col,
-                   k_col = input$c, 
-                   k_row = input$r,
-                   limits = ColLimits) %>% 
-      layout(margin = list(l = input$l, b = input$b, r='0px'))
-    
-    p$elementId <- NULL
-    
-    p
+  output$slick <- slickR::renderSlickR({
+    slickR::slickR(inset_plot(),
+                   slideId = 'gg',
+                   slickOpts = list(autoplay=TRUE,dots=TRUE,autoplaySpeed=7000))
   })
-  
-  #Render Plot ----
-  observeEvent(input$data,{
-    output$heatout <- renderPlotly({
-      if(!is.null(input$data))
-        interactiveHeatmap()
-    })
-  })
-  
-  #Render Data Table ----
-  output$tables=DT::renderDataTable(data.sel(),server = T,filter='top',
-                                    extensions = c('Scroller','FixedHeader','FixedColumns','Buttons','ColReorder'),
-                                    options = list(
-                                      dom = 't',
-                                      buttons = c('copy', 'csv', 'excel', 'pdf', 'print','colvis'),
-                                      colReorder = TRUE,
-                                      scrollX = TRUE,
-                                      fixedColumns = TRUE,
-                                      fixedHeader = TRUE,
-                                      deferRender = TRUE,
-                                      scrollY = 500,
-                                      scroller = TRUE
-                                    ))
-  
-  #Clone Heatmap ----
-  observeEvent({interactiveHeatmap()},{
-    h<-interactiveHeatmap()
-    
-    l<-list(main = input$main,xlab = input$xlab,ylab = input$ylab,
-            row_text_angle = input$row_text_angle,
-            column_text_angle = input$column_text_angle,
-            dendrogram = input$dendrogram,
-            branches_lwd = input$branches_lwd,
-            seriate = input$seriation,
-            colors=paste0(input$pal,'(',input$ncol,')'),
-            distfun_row =  input$distFun_row,
-            hclustfun_row = input$hclustFun_row,
-            distfun_col = input$distFun_col,
-            hclustfun_col = input$hclustFun_col,
-            k_col = input$c, 
-            k_row = input$r,
-            limits = paste(c(input$colorRng_min, input$colorRng_max),collapse=',')
-    )
-    
-    #l=l[!l=='']
-    l=data.frame(Parameter=names(l),Value=do.call('rbind',l),row.names = NULL,stringsAsFactors = F)
-    l[which(l$Value==''),2]='NULL'
-
-    #paramTbl=print(xtable::xtable(l),type = 'html',include.rownames=FALSE,print.results = F,html.table.attributes = c('border=0'))
-    
-    ht <- as_hux(l,add_colnames = TRUE)
-    bold(ht)[1,]  <- TRUE
-    bottom_border(ht)[1,] <- 1
-    font_size(ht) <-  10
-    position(ht) <- 'left'
-    paramTbl <- to_html(ht)
-    
-    
-    h$width='100%'
-    h$height='800px'
-    
-    tp <- tags$div(style="position: relative; top: 5px;",
-                   tags$p(
-                     HTML('Tal Galili, Alan O’Callaghan, Jonathan Sidi, Carson Sievert; heatmaply: an R package for creating interactive cluster heatmaps for online publishing, Bioinformatics, btx657.
-                     <a href="https://doi.org/10.1093/bioinformatics/btx657" target="_blank">https://doi.org/10.1093/bioinformatics/btx657</a>. 
-                     <br/><b>Try shinyHeatmaply for free on <a href="https://aqueous-crag-17834.herokuapp.com/" target="_blank">Heroku</a></b>')
-                     )
-                   )
-    
-    btm<-tags$div(style="position: relative; bottom: 5px;",
-                tags$br(),
-                tags$h4('heatmaply Parameter Settings'),
-                HTML(paramTbl),
-                tags$br(),
-                tags$em('This heatmap visualization was created using',
-                        tags$a(href="https://github.com/yonicd/shinyHeatmaply/",target="_blank",'shinyHeatmaply'),
-                        Sys.time()
-                )
-    )
-    
-    output$downloadData <- downloadHandler(
-      filename = function() {
-        paste("heatmaply-", gsub(' ','_',Sys.time()), ".html", sep="")
-      },
-      content = function(file) {
-        libdir <- paste(tools::file_path_sans_ext(basename(file)),"_files", sep = "")
-        
-        htmltools::save_html(
-          htmltools::browsable(
-              htmltools::tagList(tp,h,btm)
-            ),
-          file=file,
-          libdir = libdir
-          )
-        
-        if (!htmlwidgets:::pandoc_available()) {
-          stop("Saving a widget with selfcontained = TRUE requires pandoc. For details see:\n", 
-               "https://github.com/rstudio/rmarkdown/blob/master/PANDOC.md")
-        }
-        
-        htmlwidgets:::pandoc_self_contained_html(file, file)
-        
-        unlink(libdir, recursive = TRUE)
-      }
-    )
-  })
-  #End of Code ----
-  
+ 
 })

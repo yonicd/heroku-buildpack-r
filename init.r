@@ -3,9 +3,10 @@
 # Example R code to install packages if not already installed
 #
 
-my_packages = c("plotly","viridis","jsonlite","RColorBrewer",
-                "readxl","DT","huxtable","htmltools","htmlwidgets",
-                "shinyHeatmaply","dplyr","heatmaply")
+my_packages = c('reshape2','geojson','readxl','leaflet',
+                'httr','rgeolocate','shiny','ggplot2','sp',
+                'widyr','igraph','slickR','ggraph','svglite',
+                'dplyr')
 
 install_if_missing = function(p) {
   if (p %in% rownames(installed.packages()) == FALSE) {

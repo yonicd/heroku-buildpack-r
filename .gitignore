@@ -1,5 +1,10 @@
 .env
 *.log
 *.tar.gz
-
 .Rproj.user
+d3Tree
+shinyHeatmapply
+jsTree
+gunflow
+.Rhistory
+heroku-buildpack-r.Rproj
