@@ -1,6 +1,70 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
+#
+# NOTES:
+#
+# R presents some unique challenges when used on Heroku
+#
+# The buildpack includes all the binaries required for R to run however,
+# application authors need to include additional packages which need to be built
+# in order to be included in the slug compilation. This means a build environment
+# is needed at slug compilation time.
+#
+# R is built (by default) with the path prefix of "/usr".
+# (See https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Installation for
+# details on the prefix configure options.)
+#
+# This is a problem on Heroku, since /usr is locked down and cannot be modified.
+#
+# In the previous version of the R buildpack, R was built from source using "/app" for
+# the prefix. While this worked, there were several issues with resolution of dependencies
+# for which there were many "hacks" employed. E.g. overriding LD_LIBRARY_PATH and other
+# environment variables, using symlinks, and changing paths in ldconfig files etc.
+#
+# Further complexity is created by the way Heroku slug compilation works, in that the BUILD_DIR
+# is not same path as that in the final deployment, so further hacks were required to move files
+# around, to and from /app and BUILD_DIR. This caused issues with symlinks and since the files for
+# the slug are compressed in a tar.gz file, the "untarring" caused further issues.
+#
+# Worse still, is that version mismatches between components emerged, which caused segfaults
+# and other hard to solve problems.
+#
+# The solution? Try to use "official" packaged R versions, installed to default locations.
+#
+# Yet another version of the buildpack used the Apt buildpack, so that apt-get could be used to
+# install R and it's dependencies, but this approach proved to be fraught with similar path issues.
+#
+# Finally, (this version) uses a chroot method, which provides a sandbox in which to install R
+# correctly, and all it's dependencies, with all symlinks and paths intact.
+#
+# A small complication to this approach is that since Heroku cannot run chroot under sudo, a fake chroot
+# has to be used to allow for chroot to work under the standard user.
+#
+# The upside of this approach are:
+#
+#  * Less hacks applied, thus less details of R need to be known by the buildpack.
+#  * More maintainable when newer R versions need to be supported.
+#  * More stable, since dependencies and pathings are standard.
+#  * No segfaults or other hard to track down errors.
+#
+# The downsides of this approach are:
+#
+#  * Slightly larger slug of ~110MB,
+#
+#  * Under certain circumstances, an "ugly" command line to run R is used
+#    E.g. `fakechroot fakeroot chroot /app/.root /usr/bin/R ... --no-save`
+#    There are however wrapper scripts for R and Rscript which take care of this.
+#
+#  * Your application files are in /app, which need to be symlinked into the chroot, which
+#    can cause issues if the R `base::normalizePath(..., mustWork=TRUE)` method is used.
+#    A "method replacement hack" in `Rprofile.site` solves this issue.
+#
+#  * Some third party libraries for R cannot be used, since R needs to run in the chroot, and
+#    the library is not executed in the chroot, making R inaccessible.
+#    RServe is the most viable interface to R in this case. See the node.js example application.
+#
+
 # fail fast
 set -e
 
@@ -9,13 +73,10 @@ set -e
 
 shopt -s extglob
 
+# helper functions
+
 function topic() {
   echo "-----> $*"
-}
-
-function error() {
-  echo " !     $*" >&2
-  exit 1
 }
 
 function indent() {
@@ -30,257 +91,234 @@ function read_var() {
   echo $(head -n 1 $1)
 }
 
-# clean up leaking environment
-unset GIT_DIR
+# from https://devcenter.heroku.com/articles/buildpack-api#bin-detect
+function export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+#
+# chroot scripts embed fully qualified path
+# this functional allows you to rewrite the path
+#
+function patch_chroot() {
+  old=$1
+  new=$2
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/bin/env.fakechroot"
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/bin/fakechroot"
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/bin/ldd.fakechroot"
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/etc/fakechroot/chroot.env"
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/etc/fakechroot/debootstrap.env"
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/etc/fakechroot/rinse.env"
+  sed -i "s#$old#$new#g" "$BUILD_DIR/.tools/fakechroot/lib/fakechroot/libfakechroot.la"
+}
 
 # parse and derive params
+BUILDPACK_DIR=`cd $(dirname $0); cd ..; pwd`
 BUILD_DIR=$1
 CACHE_DIR=$2
-LP_DIR=`cd $(dirname $0); cd ..; pwd`
-
-# ensure exist
-mkdir -p $BUILD_DIR
-mkdir -p $CACHE_DIR
+ENV_DIR=$3
 
 # fix STACK variable if unset
-if [ -z "${STACK}" ];
-then
-  STACK="cedar-14"
+if [ -z "${STACK}" ]; then
+  STACK="heroku-16"
 fi
 
 # ensure correct stack
-if [[ ! "$STACK" == "cedar-14" ]]; then
+if [[ ! "$STACK" == "heroku-16" ]]; then
 
   echo
-  echo "-----> ERROR: This version of the buildpack is intended for use with the 'cedar-14' stack"
+  echo "-----> ERROR: This version of the buildpack is intended for use with the 'heroku-16' stack"
   echo
-  echo "       Use the 'heroku stack:set' CLI command to use the 'cedar-14' stack."
+  echo "       Use the 'heroku stack:set' CLI command to use the 'heroku-16' stack."
   echo "       See https://devcenter.heroku.com/articles/stack for more information."
   echo
   exit 1
 
 fi
 
-# show deprecation notice
-echo
-topic "WARNING: This version of the buildpack is no longer supported."
-echo "Please see https://github.com/virtualstaticvoid/heroku-buildpack-r for more information." | indent
-echo
-
-# config
-VENDOR_DIR="$BUILD_DIR/vendor"
-GCC_VERSION=4.8
-ARCH=`dpkg-architecture -qDEB_HOST_MULTIARCH`
-
-# init.r file may be init.R
-if [ -f $BUILD_DIR/init.r ]; then
-  INITR="init.r"
-elif [ -f $BUILD_DIR/init.R ]; then
-  INITR="init.R"
-fi
-
 # read in R version if file exists
-if [[ -f "$BUILD_DIR/.r-version" ]];
-then
+if [[ -f "$BUILD_DIR/.r-version" ]]; then
   R_VERSION=`read_var $BUILD_DIR/.r-version`
   echo "NOTE: Using R version override [$R_VERSION]" | indent
 else
-  R_VERSION="3.3.1"
+  R_VERSION="3.4.0"
 fi
 
-# read in buildback binary version if file exists
-if [[ -f "$BUILD_DIR/.r-buildpack-version" ]];
-then
-  BUILD_PACK_VERSION=`read_var $BUILD_DIR/.r-buildpack-version`
-  echo "NOTE: Using buildback version override [$BUILD_PACK_VERSION]" | indent
-else
-  BUILD_PACK_VERSION="20160720-0331"
-fi
+# environment
+TOOLS_DIR="$BUILD_DIR/.tools"
+FAKECHROOT_DIR="$TOOLS_DIR/fakechroot"
+CHROOT_DIR="$BUILD_DIR/.root"
+# Note: fakeroot is included at buildtime, so no need to reference our copy at this stage
 
-S3_BUCKET="heroku-buildpack-r"
+export PATH="$FAKECHROOT_DIR/sbin:$FAKECHROOT_DIR/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+
+# load application environment variables,
+# so that they can be accessed by this script
+export_env_dir "$ENV_DIR"
+
+# S3 bucket, cran mirror, buildpack version can be set via environment
+S3_BUCKET=${S3_BUCKET:-"heroku-buildpack-r"}
+CRAN_MIRROR=${CRAN_MIRROR:-"http://cran.revolutionanalytics.com"}
+BUILD_PACK_VERSION=${BUILD_PACK_VERSION:-latest}
+
+# build up path to binaries on S3
 R_BINARIES="http://${S3_BUCKET}.s3.amazonaws.com/${STACK}/R-${R_VERSION}-binaries-${BUILD_PACK_VERSION}.tar.gz"
 
 # vendor R into the slug
-echo "Vendoring R $R_VERSION for $STACK stack ($BUILD_PACK_VERSION)" | indent
+topic "Vendoring R $R_VERSION for $STACK stack ($BUILD_PACK_VERSION)"
 
-# Check if we can pull from cache rather than downloading
-if [[ -f "$CACHE_DIR/.r-version" ]] &&
-   [[ "$(read_var $CACHE_DIR/.r-version)" = "$R_VERSION" ]] &&
-   [[ -f "$CACHE_DIR/.r-buildpack-version" ]] &&
-   [[ "$(read_var $CACHE_DIR/.r-buildpack-version)" = "$BUILD_PACK_VERSION" ]];
-then
+# download and unpack binaries
+echo "Downloading and unpacking R binaries ($R_BINARIES)" | indent
 
-  # copy from cache to the build directory
-  echo "Retrieving R binaries and packages from cache" | indent
-  cp -r $CACHE_DIR/vendor $BUILD_DIR
+pushd $BUILD_DIR > /dev/null
+curl $R_BINARIES -s -o - | tar xzf - -C .
+popd > /dev/null
+
+# set to build dir, so packages can be installed
+patch_chroot "/app" "$BUILD_DIR"
+
+pushd $CHROOT_DIR > /dev/null
+
+# link app dir into chroot
+ln -sf $BUILD_DIR app
+
+# make /app the home directory since application
+# authors will expect the same behaviour within the chroot
+# as the heroku instance. I.e. /app exists and contains their code etc.
+sed -i "s#root:x:0:0:root:/root:/bin/bash#root:x:0:0:root:/app:/bin/bash#g" etc/passwd
+
+###
+#
+# FIXME:
+#   might be a bug in fakechroot, which doesn't work when a relative symlink refers to a child in the same directory,
+#
+#   e.g. /usr/lib/libR.so => R/lib/libR.so
+#        changing the symlink to the following works
+#        /usr/lib/libR.so => ../lib/R/lib/libR.so
+#
+
+fakechroot fakeroot chroot $CHROOT_DIR \
+  /bin/sh -c 'cd /usr/lib && ln -sf ../lib/R/lib/libR.so libR.so'
+
+#
+###
+
+popd > /dev/null
+
+# Aptfile?
+if [[ -f "$BUILD_DIR/Aptfile" ]]; then
+
+  topic "Installing binary dependencies from Aptfile"
+
+  # TODO: add support for deb files
+
+  PACKAGES=""
+  while IFS='' read -r PACKAGE || [[ -n "$PACKAGE" ]]; do
+    PACKAGES="$PACKAGES $PACKAGE"
+  done < "$BUILD_DIR/Aptfile"
+
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    apt-get update > /dev/null
+
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    apt-get install -y $PACKAGES 2>&1 | indent
+
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    apt-get clean > /dev/null
+
+  # remove unneeded files
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    rm -rf /var/lib/apt/lists/* > /dev/null
+
+fi
+
+# write normalizePath hack to Rprofile.site
+cp "$BUILDPACK_DIR/bin/Rprofile.site" "$CHROOT_DIR/etc/R/Rprofile.site"
+
+# install application author dependencies from CRAN
+topic "Executing init.r script"
+
+# get the init.r file to use
+# it can be init.[rR] or run.R
+if [[ -f "$BUILD_DIR/init.r" ]]; then
+  INIT_FILE="$BUILD_DIR/init.r"
+elif [[ -f "$BUILD_DIR/init.R" ]]; then
+  INIT_FILE="$BUILD_DIR/init.R"
+else
+  # assuming run.R is present
+  unset INIT_FILE
+fi
+
+if [[ ! -z "$INIT_FILE" ]]; then
+
+  # prepare wrapper script
+  WRAPPER="$BUILD_DIR/wrapper.R"
+  cp "$BUILDPACK_DIR/bin/wrapper.R" $WRAPPER
+
+  # perform insertions
+  #  would have preferred to use sed or awk for this, but it's real tricky with multi-line
+  #  replacements, so using a Ruby program, as Ruby is installed on Heroku by default
+  ruby "$BUILDPACK_DIR/bin/util.rb" "$WRAPPER" "$INIT_FILE" "$BUILD_DIR" "$CRAN_MIRROR"
+
+  # execute the init wrapper
+  # working directory must be /app so that provided packages/scripts can be found
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    /usr/bin/R --no-save --quiet --slave --file=/app/wrapper.R 2>&1 | indent
+
+  # determine whether the R script failed
+  if [[ -f "$CHROOT_DIR/app/status" ]]; then
+    echo "R $R_VERSION successfully installed (with init)" | indent
+  else
+    echo -e "\033[1;31mERROR: R $R_VERSION failed while executing \"init\". Check the log for details.\033[0m" | indent
+    exit 1
+  fi
 
 else
 
-  # download and unpack binaries
-  echo "Downloading and unpacking R binaries ($R_BINARIES)" | indent
-  curl $R_BINARIES -s -o - | tar xzf - -C $BUILD_DIR
+  echo "R $R_VERSION successfully installed" | indent
 
 fi
 
-#
-# expected initial layout of $BUILD_DIR
-#
-#  $BUILD_DIR
-#   |- vendor    # <= $VENDOR_DIR
-#      |- .apt   # <= this is here, to prevent clashes, but will be moved
-#      |- R
-#
+# fix up /app symlink for runtime location
+pushd $CHROOT_DIR > /dev/null
+rm app
+ln -s /app app
+popd > /dev/null
 
-# this buildpack may be used together with heroku-buildpack-apt
-# in which case, there may be additional dependancies which need
-# to be copied to /app/.apt, so that R can find them
-if [ -d $BUILD_DIR/.apt ]; then
+# remove unneeded files to reduce slug size
+rm -rf $CHROOT_DIR/tmp/*.rds
+rm -rf $CHROOT_DIR/tmp/downloaded_packages/*
+rm -rf $CHROOT_DIR/var/cache/apt
+rm -rf $CHROOT_DIR/var/lib/dpkg
 
-  # move the app authors binaries
-  echo "Copying existing .apt files" | indent
-  cp -r $BUILD_DIR/.apt /app
-
-  # the buildpack binaries will be merged with these
-  # so there may be issues if different versions
-  # are included over those from the R buildpack
-
-  echo "Merging buildpack .apt files" | indent
-  cp -r $VENDOR_DIR/.apt/* /app/.apt
-
-  rm -rf $BUILD_DIR/.apt
-  rm -rf $VENDOR_DIR/.apt
-
-else
-
-  # move the binary dependances to /app/.apt
-  # so that R can find them when compiling packages
-  mv $VENDOR_DIR/.apt /app
-
-fi
-
-# move the R binaries to /app/vendor/R
-mv $VENDOR_DIR/R /app/vendor
-
-# trialed and errored on this; copy over libs to gfortran, so
-# that liblto_plugin.so and others can be found
-# (tried using LDFLAGS, LD_LIBRARY_PATH and LIBRARY_PATH but didn't work)
-cp -r /usr/lib/gcc/$ARCH/$GCC_VERSION/* /app/.apt/usr/lib/gcc/$ARCH/$GCC_VERSION
-
-# fix up package config files ~ point them to /app/.apt/usr/... instead of /usr/...
-for pcfile in /app/.apt/usr/lib/pkgconfig/*.pc
-do
-  sed -i 's/\/usr/\/app\/.apt\/usr/g' $pcfile
-done
-
-for pcfile in /app/.apt/usr/lib/$ARCH/pkgconfig/*.pc
-do
-  sed -i 's/\/usr/\/app\/.apt\/usr/g' $pcfile
-done
-
-for pcfile in /app/.apt/usr/share/pkgconfig/*.pc
-do
-  sed -i 's/\/usr/\/app\/.apt\/usr/g' $pcfile
-done
-
-# prevent warnings when building packages
-# since these directories/files aren't included
-# in the buildpack to make it smaller
-mkdir -p /app/vendor/R/lib64/R/doc/html
-touch /app/vendor/R/lib64/R/doc/html/R.css
-
-#
-# expected layout
-#
-#  /app
-#    /.apt
-#    /vendor
-#      /R
-#
-# NOTE: there are a whole bunch more directories
-# and files here, provided by Heroku, which we
-# aren't interested in, so ignoring them
-#
-
-# set environment variables, needed for compiling packages
-source "$LP_DIR/bin/r_environment.sh"
-
-# Makevars?
-if [[ -f "$BUILD_DIR/Makevars" ]]; then
-  echo "Setting Makevars" | indent
-  mkdir -p /app/.R
-  cp $BUILD_DIR/Makevars /app/.R/Makevars
-fi
-
-apt-get update
-apt-get install -y libxml2-dev
-
-# hook for before compilation
-if [[ -f "$BUILD_DIR/before_compile" ]]; then
-  echo "-----> Executing before compile hook"
-  source "$BUILD_DIR/before_compile"
-fi
-
-# https://cran.r-project.org/doc/manuals/r-release/R-exts.html
-# trialed and errored on this; delete .a files to prevent
-# relocation compile errors with shared objects
-# rm /app/.apt/usr/lib/*.a
-# rm /app/.apt/usr/lib/$ARCH/*.a
-# rm /app/.apt/usr/lib/gcc/$ARCH/$GCC_VERSION/*.a
-
-# install dependencies from CRAN
-echo "Executing init.r script" | indent
-
-# set the CRAN mirror and run the init.r program
-# NOTE: output can't be indented unfortunately
-/app/vendor/R/bin/R --no-save -s <<RPROG 2>&1 | indent
-  cat("\n=====> init.r Starting...\n")
-  Sys.setenv(BUILD_DIR="$BUILD_DIR")
-  setwd("$BUILD_DIR")
-  r <- getOption("repos");
-  r["CRAN"] <- "$CRAN_MIRROR";
-  options(repos=r);
-  `cat $BUILD_DIR/$INITR`
-  cat("\n=====> init.r Completed Successfully\n")
-RPROG
-
-# TODO: determine whether the R script failed
-echo
-echo "R $R_VERSION successfully installed" | indent
-
-# hook for after compilation
-if [[ -f "$BUILD_DIR/after_compile" ]]; then
-  echo "-----> Executing after compile hook"
-  source "$BUILD_DIR/after_compile"
-fi
-
-#
-# need to copy binaries back to the build directory so that any
-# installed packages and other dependances get included in the slug
+# when deployed, the path will be /app
+patch_chroot "$BUILD_DIR" "/app"
 
 # copy over environment
 mkdir -p "$BUILD_DIR/.profile.d"
-cp "$LP_DIR/bin/r_environment.sh" "$BUILD_DIR/.profile.d/r_environment.sh"
+cp "$BUILDPACK_DIR/bin/renv.sh" "$BUILD_DIR/.profile.d/renv.sh"
 
-# now copy everything back to the BUILD_DIR
-# which will be used to make the slug
-cp -r /app/.apt $BUILD_DIR
-cp -r /app/vendor/R $VENDOR_DIR
+# copy wrappers to /app/bin
+mkdir -p "$BUILD_DIR/bin"
+cp "$BUILDPACK_DIR/bin/R_wrapper" "$BUILD_DIR/bin/R"
+cp "$BUILDPACK_DIR/bin/Rscript_wrapper" "$BUILD_DIR/bin/Rscript"
 
-#
-# layout of $BUILD_DIR now
-#
-#  $BUILD_DIR
-#   |- .apt
-#   |- vendor    # <= $VENDOR_DIR
-#      |- R
-#
-
-# copy to the cache directory
-echo "$R_VERSION" > "$CACHE_DIR/.r-version"
-echo "$BUILD_PACK_VERSION" > "$CACHE_DIR/.r-buildpack-version"
-mkdir -p $CACHE_DIR/vendor
-cp -r /app/.apt $CACHE_DIR/vendor
-cp -r /app/vendor/R $CACHE_DIR/vendor
+# TODO: cache build
 
 # give environment to later buildpacks
-export | grep -E -e ' (PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LDFLAGS|PKG_LIBS|PKG_CPPFLAGS|PKG_CONFIG_PATH|INCLUDE_PATH|CPATH|CPPPATH|R_INCLUDE)=' >> "$LP_DIR/export"
+cat > "$BUILDPACK_DIR/export" <<EOL
+declare -x S3_BUCKET="$S3_BUCKET"
+declare -x TOOLS_DIR="$TOOLS_DIR"
+declare -x FAKECHROOT_DIR="$FAKECHROOT_DIR"
+declare -x CHROOT_DIR="$CHROOT_DIR"
+declare -x CRAN_MIRROR="$CRAN_MIRROR"
+EOL

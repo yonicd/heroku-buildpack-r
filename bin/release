@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-cat <<EOF
---- {}
+if [ -f "$1/run.R" ]; then
+
+	# shiny app
+	cat <<EOF
+---
+# R Shiny
+default_process_types:
+  console: fakechroot fakeroot chroot /app/.root /bin/bash
+  web: fakechroot fakeroot chroot /app/.root /bin/sh -c 'cd /app && /usr/bin/R -f /app/run.R --gui-none --no-save'
 EOF
+
+else
+
+	# console app
+	cat <<EOF
+---
+# R Console
+default_process_types:
+  console: fakechroot fakeroot chroot /app/.root /bin/bash
+EOF
+
+fi
