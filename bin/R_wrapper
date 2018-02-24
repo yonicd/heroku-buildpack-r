@@ -1,2 +1,0 @@
-#!/bin/bash
-fakechroot fakeroot chroot /app/.root /usr/bin/R "$@"
