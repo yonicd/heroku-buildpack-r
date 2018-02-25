@@ -6,4 +6,3 @@ libprotobuf-dev
 libgeos-dev
 protobuf-compiler
 gdal-bin
-libjq-dev
