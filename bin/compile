@@ -214,6 +214,10 @@ fakechroot fakeroot chroot $CHROOT_DIR \
 
 popd > /dev/null
 
+add-apt-repository -y ppa:opencpu/jq
+add-apt-repository ppa:ubuntugis/ppa
+apt-get update
+
 # Aptfile?
 if [[ -f "$BUILD_DIR/Aptfile" ]]; then
 
@@ -228,18 +232,6 @@ if [[ -f "$BUILD_DIR/Aptfile" ]]; then
 
   fakechroot fakeroot chroot $CHROOT_DIR \
     apt-get update > /dev/null
-
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    add-apt-repository -y ppa:opencpu/jq > /dev/null
-
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    apt-get update -q > /dev/null
-
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    add-apt-repository ppa:ubuntugis/ppa > /dev/null
-
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    apt-get update -q > /dev/null
 
   fakechroot fakeroot chroot $CHROOT_DIR \
     apt-get install -y $PACKAGES 2>&1 | indent
