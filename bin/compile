@@ -244,8 +244,8 @@ if [[ -f "$BUILD_DIR/Aptfile" ]]; then
     apt-get clean > /dev/null
 
   # remove unneeded files
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    rm -rf /var/lib/apt/lists/* > /dev/null
+  # fakechroot fakeroot chroot $CHROOT_DIR \
+  #  rm -rf /var/lib/apt/lists/* > /dev/null
 
 fi
 
