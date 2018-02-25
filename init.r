@@ -21,14 +21,14 @@ install_if_missing_gh = function(p) {
   }
 }
 
-#install.packages("remotes", dependencies = TRUE)
+install.packages("remotes", dependencies = TRUE)
 
 my_packages_gh = c("igraph/rigraph")
-#invisible(sapply(my_packages, install_if_missing_gh))
+invisible(sapply(my_packages, install_if_missing_gh))
 
 my_packages = c('reshape2','geojson','readxl','leaflet',
                 'httr','rgeolocate','shiny','ggplot2','sp',
                 'widyr','slickR','ggraph','svglite',
                 'dplyr')
 
-#invisible(sapply(my_packages, install_if_missing))
+invisible(sapply(my_packages, install_if_missing))
