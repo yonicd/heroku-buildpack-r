@@ -235,7 +235,7 @@ if [[ -f "$BUILD_DIR/Aptfile" ]]; then
     add-apt-repository ppa:ubuntugis/ppa 2>&1 | indent
 
   fakechroot fakeroot chroot $CHROOT_DIR \
-    apt-get update > /dev/null
+    apt-get update -q > /dev/null
 
   fakechroot fakeroot chroot $CHROOT_DIR \
     apt-get install -y $PACKAGES 2>&1 | indent
