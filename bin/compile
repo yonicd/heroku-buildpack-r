@@ -230,6 +230,12 @@ if [[ -f "$BUILD_DIR/Aptfile" ]]; then
     apt-get update > /dev/null
 
   fakechroot fakeroot chroot $CHROOT_DIR \
+    add-apt-repository -y ppa:opencpu/jq
+
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    apt-get update -q
+
+  fakechroot fakeroot chroot $CHROOT_DIR \
     apt-get install -y $PACKAGES 2>&1 | indent
 
   fakechroot fakeroot chroot $CHROOT_DIR \
