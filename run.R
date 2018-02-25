@@ -1,5 +1,5 @@
 library(reshape2)
-library(geojson)
+#library(geojson)
 library(readxl)
 library(leaflet)
 library(httr)
