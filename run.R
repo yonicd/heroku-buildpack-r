@@ -1,9 +1,10 @@
+# library(geojson)
+# library(readxl)
+# library(httr)
+# library(rgeolocate)
 library(reshape2)
-#library(geojson)
-library(readxl)
 library(leaflet)
-library(httr)
-library(rgeolocate)
+library(geojsonio)
 library(shiny)
 library(ggplot2)
 library(sp)
@@ -51,13 +52,13 @@ states <- geojsonio::geojson_read('www/us-states.geojson', what = "sp")
 
 load('www/gun_mat.rda')
 
-whereami <- rgeolocate::ip_api(httr::content(httr::GET('https://api.ipify.org?format=json'))[1])
+#whereami <- rgeolocate::ip_api(httr::content(httr::GET('https://api.ipify.org?format=json'))[1])
 
-thisstate <- 'Illinois'
+thisstate <- 'Florida'
 
-if(whereami$country_code=='US'){
-  thisstate <- whereami$region_name
-}
+# if(whereami$country_code=='US'){
+#   thisstate <- whereami$region_name
+# }
 
 net_flow <- calc(side = 'from')%>%
   left_join(calc(side = 'to'),by=c('year','state'))%>%
