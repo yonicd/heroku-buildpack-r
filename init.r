@@ -28,6 +28,6 @@ my_packages = c('reshape2','readxl','leaflet',
                 'widyr','slickR','ggraph','svglite',
                 'dplyr')
 
-# install.packages("remotes", dependencies = TRUE)
-# invisible(sapply(my_packages_gh, install_if_missing_gh))
-# invisible(sapply(my_packages, install_if_missing))
+ install.packages("remotes", dependencies = TRUE)
+ invisible(sapply(my_packages_gh, install_if_missing_gh))
+ invisible(sapply(my_packages, install_if_missing))
