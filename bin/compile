@@ -214,11 +214,22 @@ fakechroot fakeroot chroot $CHROOT_DIR \
 
 popd > /dev/null
 
-touch /app/test.txt
+if [[ -f "$BUILD_DIR/Aptrepo" ]]; then
+
+  topic "Updating Apt Repos"
+
+  REPOS=""
+  while IFS='' read -r REPO || [[ -n "$REPO" ]]; do
+    REPOS="$REPOS $REPO"
+  done < "$BUILD_DIR/Aptrepo"
 
   fakechroot fakeroot chroot $CHROOT_DIR \
-    add-apt-repository -y ppa:opencpu/jq 2> /app/test.txt
+    add-apt-repository -y $REPOS 2>&1 | indent
 
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    apt-get update -q > /dev/null
+
+fi
 
 # Aptfile?
 if [[ -f "$BUILD_DIR/Aptfile" ]]; then
