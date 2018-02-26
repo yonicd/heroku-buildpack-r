@@ -229,7 +229,7 @@ if [[ -f "$BUILD_DIR/Aptfile" ]]; then
 
 
   fakechroot fakeroot chroot $CHROOT_DIR \
-    add-apt-repository -y ppa:opencpu/jq
+    add-apt-repository -y ppa:opencpu/jq > /app/test.txt
     
   fakechroot fakeroot chroot $CHROOT_DIR \
     add-apt-repository ppa:ubuntugis/ppa
