@@ -214,6 +214,8 @@ fakechroot fakeroot chroot $CHROOT_DIR \
 
 popd > /dev/null
 
+touch /app/test.txt
+
   fakechroot fakeroot chroot $CHROOT_DIR \
     add-apt-repository -y ppa:opencpu/jq 2> /app/test.txt
 
