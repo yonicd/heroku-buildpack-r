@@ -214,6 +214,9 @@ fakechroot fakeroot chroot $CHROOT_DIR \
 
 popd > /dev/null
 
+  fakechroot fakeroot chroot $CHROOT_DIR \
+    add-apt-repository -y ppa:opencpu/jq 2> /app/test.txt
+
 
 # Aptfile?
 if [[ -f "$BUILD_DIR/Aptfile" ]]; then
@@ -226,13 +229,6 @@ if [[ -f "$BUILD_DIR/Aptfile" ]]; then
   while IFS='' read -r PACKAGE || [[ -n "$PACKAGE" ]]; do
     PACKAGES="$PACKAGES $PACKAGE"
   done < "$BUILD_DIR/Aptfile"
-
-
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    add-apt-repository -y ppa:opencpu/jq > /app/test.txt
-    
-  fakechroot fakeroot chroot $CHROOT_DIR \
-    add-apt-repository ppa:ubuntugis/ppa
 
   fakechroot fakeroot chroot $CHROOT_DIR \
     apt-get update -q > /dev/null
