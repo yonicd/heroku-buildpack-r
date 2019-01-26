@@ -9,3 +9,4 @@ gunflow
 .Rhistory
 heroku-buildpack-r.Rproj
 bin_14
+.DS_Store

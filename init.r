@@ -21,13 +21,10 @@ install_if_missing_gh = function(p) {
   }
 }
 
-my_packages_gh = c("igraph/rigraph")
+my_packages_gh = c("thomasp85/patchwork","yonicd/rtweet","yonicd/toddlr")
 
-# 'readxl','httr','rgeolocate','shiny','sp','geojsonio'
-
-my_packages = c('reshape2','leaflet','ggplot2','widyr',
-                'slickR','ggraph','svglite','dplyr')
+my_packages = c('ggplot2','purrr','slickR','dplyr','miniUI')
 
  install.packages(c('Rcpp','remotes'), dependencies = TRUE)
- invisible(sapply(my_packages_gh, install_if_missing_gh))
  invisible(sapply(my_packages, install_if_missing))
+ invisible(sapply(my_packages_gh, install_if_missing_gh))
