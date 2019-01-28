@@ -111,11 +111,13 @@ shiny::shinyApp(
       list(time = ret_plots , snips = ret_snippets, twe_dat = ret_twe)
     })
     
-    output$plot <- shiny::renderPlot({
+    output$plot <- shiny::renderCachedPlot({
       
       toddlr_plots(plot_dat())
       
-    })
+    },
+    cacheKeyExpr = {list(input$date,input$prox)}
+    )
     
     shiny::observeEvent(c(input$date,input$prox,input$slickslide),{
       output$slick <- slickR::renderSlickR({
