@@ -12,7 +12,7 @@ shiny::shinyApp(
     miniUI::gadgetTitleBar(title = '"Toddler in Chief" Thread Analytics Dashboard',
                            right = shiny::actionButton(
                              inputId = "gh",
-                             label = "Source R Package: toddlr",
+                             label = sprintf("Source R Package: toddlr"),
                              icon = icon('github'),
                              onclick ="window.open('https://github.com/yonicd/toddlr', '_blank')"
                              ),
@@ -76,7 +76,16 @@ shiny::shinyApp(
       tw <- tw%>%
         toddlr:::create_whoami()%>%
         toddlr:::create_prox()%>%
-        dplyr::filter(prox %in% input$prox )
+        dplyr::filter(
+          prox %in% input$prox 
+        )%>%
+        dplyr::filter(
+          dplyr::between(
+            x = created_at,
+            left = input$date[1],
+            right = input$date[2]
+          )
+        )
       
       ret_plots <- tw%>%
         toddlr:::toddlr_status()%>%
@@ -86,32 +95,16 @@ shiny::shinyApp(
       
       ret_plots <- ret_plots%>%
         dplyr::group_by(prox)%>%
-        dplyr::mutate(
-          now = dplyr::between(
-            x = as.Date(sprintf('%s-01',ym),format = '%Y-%m-%d'),
-            left = as.Date(sprintf('%s-01',strftime(input$date[1],'%Y-%m')),format = '%Y-%m-%d'),
-            right = as.Date(sprintf('%s-01',strftime(input$date[2],'%Y-%m')),format = '%Y-%m-%d')
-          ),
-          nn=cumsum(n)
-        )%>%
+        dplyr::mutate(nn=cumsum(n))%>%
         dplyr::ungroup()%>%
         dplyr::mutate(
           i = as.numeric(as.factor(ym))
         )
       
-      ret_filter <- tw%>%
-        dplyr::filter(
-          dplyr::between(
-            x = created_at,
-            left = input$date[1],
-            right = input$date[2]
-          )
-        )
-      
-      ret_snippets <- ret_filter%>%
+      ret_snippets <- tw%>%
         dplyr::count(prox,whoami)
       
-      ret_twe <- ret_filter%>%
+      ret_twe <- tw%>%
         dplyr::select(screen_name,status_id)
       
       list(time = ret_plots , snips = ret_snippets, twe_dat = ret_twe)
