@@ -1,11 +1,22 @@
-tw <- toddlr::toc%>%
+toc <- readRDS('toc_src/toc.rds')
+
+tw <- toc%>%
   toddlr::tweet_threading_fw()
+
+if( max(toc$created_at) < max(tw$created_at) ){
+  saveRDS(tw,file = 'toc_src/toc.rds', compress = TRUE)
+}
 
 shiny::shinyApp(
   ui = miniUI::miniPage(
     miniUI::gadgetTitleBar(title = '"Toddler in Chief" Thread Analytics Dashboard',
-                           left = miniUI::miniTitleBarButton("gh", "toddlr"),
-                           right = NULL
+                           right = shiny::actionButton(
+                             inputId = "gh",
+                             label = "Source R Package: toddlr",
+                             icon = icon('github'),
+                             onclick ="window.open('https://github.com/yonicd/toddlr', '_blank')"
+                             ),
+                           left = NULL
     ),
     miniUI::miniContentPanel(
       shiny::sidebarLayout(
@@ -58,10 +69,6 @@ shiny::shinyApp(
     
     shiny::observeEvent(input$done, {
       shiny::stopApp()
-    })
-    
-    shiny::observeEvent(input$gh, {
-      browseURL('https://github.com/yonicd/toddlr')
     })
     
     plot_dat <- shiny::eventReactive(c(input$date,input$prox),{
