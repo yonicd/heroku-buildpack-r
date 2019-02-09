@@ -21,9 +21,9 @@ install_if_missing_gh = function(p) {
   }
 }
 
-my_packages_gh = c("thomasp85/patchwork","yonicd/rtweet","yonicd/toddlr")
+my_packages_gh = c("d3treeR/d3treeR","daattali/timevis")
 
-my_packages = c('ggplot2','purrr','slickR','dplyr','miniUI')
+my_packages = c('ggplot2','slickR','dplyr')
 
  install.packages(c('Rcpp','remotes'), dependencies = TRUE)
  invisible(sapply(my_packages, install_if_missing))
