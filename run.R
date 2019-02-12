@@ -39,8 +39,8 @@ test <- test%>%dplyr::left_join(group_data,by='TYPE')
 group_data <- group_data%>%dplyr::rename(content = TYPE,id=group)
 
 shiny::runApp(
-  # appDir = getwd(),
-  # host = '0.0.0.0',
-  # port = as.numeric(Sys.getenv('PORT'))
+  appDir = getwd(),
+  host = '0.0.0.0',
+  port = as.numeric(Sys.getenv('PORT'))
 )
 
