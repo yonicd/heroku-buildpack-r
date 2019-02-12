@@ -10,29 +10,18 @@ shiny::shinyApp(
       d3treeR::d3tree3Output('plot')
     ),
     shiny::mainPanel(
-        shiny::h3('POTUSVIZ: Visualize POTUS Private Schedule'),
+        shiny::h3('Visualize POTUS Private Schedule'),
         shiny::h5('as published by Axios and cross referenced with @realDonaldTrump Twitter feed'),
         shiny::hr(),
-        shiny::column(
           shiny::sliderInput(
           inputId = 'n',
           label = 'Tweets to load',
           min = 1,
           max = 5,
           value = 5),
-        width = 6),
-        shiny::column(
-        shiny::radioButtons(
-          inputId      = 'dltype',
-          label        = 'Export Format',
-          choiceNames  = c('CSV','RDS'),
-          choiceValues = c('csv','rds'),
-          selected     = 'csv',
-          inline       = TRUE),
         shiny::downloadButton('downloadData','Export Data'),
-      width = 6),
-      shiny::hr(),
-      slickR::slickROutput('slick',width = '95%')
+        shiny::hr(),
+        slickR::slickROutput('slick',width = '95%')
     )
   )
 ),
@@ -173,17 +162,8 @@ server = function(input, output,session) {
   })
   
   output$downloadData <- downloadHandler(
-    filename = function() {
-      sprintf('potusviz-data.%s', input$dltype)
-    },
-    content = function(con) {
-      if(input$dltype=='csv'){
-        write.csv(axios, con)  
-      }else{
-        saveRDS(axios,con)
-      }
-      
-    }
+    filename = function() {'potusviz-data.Rds'},
+    content  = function(con) {saveRDS(axios,con)}
   )
   
   
