@@ -140,7 +140,7 @@ server = function(input, output,session) {
       d <- dat_d()
       
       if(nrow(d)>0){
-        freq <- d%>%
+        treedat <- d%>%
           dplyr::count(TYPE,TASK)%>%
           dplyr::group_by(TYPE)%>%
           dplyr::mutate(
@@ -149,14 +149,20 @@ server = function(input, output,session) {
               paste0(strwrap(x,width = 20),collapse = '\n')
             }))
         
-        d3treeR::d3tree3(
-          treemap::treemap(freq,
-                           index=c("TYPE","TASK_WRAP"),
-                           vSize="n",
-                           vColor = "TYPE.p",
-                           palette=viridis::plasma(10),
-                           type="index"
-          ),rootname = 'Private Schedule',celltext='name') 
+        pals <- viridis::plasma(10)
+        
+        tmap <- treemap::treemap(treedat,
+                                 index=c("TYPE","TASK_WRAP"),
+                                 vSize="n",
+                                 vColor = "TYPE.p",
+                                 palette = pals,
+                                 type="index"
+        )
+        
+        d3treeR::d3tree2(
+          data = tmap,
+          rootname = 'Private Schedule',
+          celltext='name') 
       }
     })
   })

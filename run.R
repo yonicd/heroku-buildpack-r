@@ -3,6 +3,7 @@ library(timevis)
 library(treemap)
 library(d3treeR)
 library(ggplot2)
+library(purrr)
 library(dplyr)
 
 axios <- readRDS('www/axios.Rds')
