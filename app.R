@@ -143,23 +143,22 @@ server = function(input, output,session) {
         treedat <- d%>%
           dplyr::count(TYPE,TASK)%>%
           dplyr::group_by(TYPE)%>%
-          dplyr::mutate(
-            p = n/sum(n),
-            TASK_WRAP = purrr::map_chr(TASK,.f=function(x){
-              paste0(strwrap(x,width = 20),collapse = '\n')
-            }))
+          dplyr::mutate(p = n/sum(n))%>%
+          dplyr::ungroup()
+        
+        treedat$TASK <- gsub('FEDERATION(.*?)$','',treedat$TASK)
         
         pals <- viridis::plasma(10)
         
         tmap <- treemap::treemap(treedat,
-                                 index=c("TYPE","TASK_WRAP"),
+                                 index=c("TYPE","TASK"),
                                  vSize="n",
                                  vColor = "TYPE.p",
                                  palette = pals,
                                  type="index"
         )
         
-        d3treeR::d3tree2(
+        d3treeR::d3tree3(
           data = tmap,
           rootname = 'Private Schedule',
           celltext='name') 
