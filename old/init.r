@@ -21,11 +21,10 @@ install_if_missing_gh = function(p) {
   }
 }
 
-my_packages <- c('plumber','Rcpp','remotes')
+my_packages_gh = c("d3treeR/d3treeR")
 
+my_packages = c('ggplot2','slickR','dplyr','viridis','purrr','timevis')
+
+ install.packages(c('Rcpp','remotes'), dependencies = TRUE)
  invisible(sapply(my_packages, install_if_missing))
-
-my_packages_gh <-  NULL
- 
-  if(!is.null(my_packages_gh)) 
-    invisible(sapply(my_packages_gh, install_if_missing_gh))
+ invisible(sapply(my_packages_gh, install_if_missing_gh))
