@@ -1,7 +1,14 @@
-# init.R
 #
-# Example R code to install packages if not already installed
+# Example R code to install packages
+# See http://cran.r-project.org/doc/manuals/R-admin.html#Installing-packages for details
 #
+
+###########################################################
+# Update this line with the R packages to install:
+
+my_packages = c("plumber")
+
+###########################################################
 
 install_if_missing = function(p) {
   if (p %in% rownames(installed.packages()) == FALSE) {
@@ -11,20 +18,4 @@ install_if_missing = function(p) {
     cat(paste("Skipping already installed package:", p, "\n"))
   }
 }
-
-install_if_missing_gh = function(p) {
-  if (p %in% rownames(installed.packages()) == FALSE) {
-    remotes::install_github(repo = p)
-  }
-  else {
-    cat(paste("Skipping already installed package:", p, "\n"))
-  }
-}
-
-my_packages_gh = c("thomasp85/patchwork","yonicd/rtweet","yonicd/toddlr")
-
-my_packages = c('ggplot2','purrr','slickR','dplyr','miniUI')
-
- install.packages(c('Rcpp','remotes'), dependencies = TRUE)
- invisible(sapply(my_packages, install_if_missing))
- invisible(sapply(my_packages_gh, install_if_missing_gh))
+invisible(sapply(my_packages, install_if_missing))

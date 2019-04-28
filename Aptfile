@@ -1,8 +1,1 @@
 libxml2-dev
-libudunits2-dev
-libssh2-1-dev
-libv8-3.14-dev
-libprotobuf-dev
-libgeos-dev
-protobuf-compiler
-gdal-bin
