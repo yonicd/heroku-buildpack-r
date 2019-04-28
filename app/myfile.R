@@ -1,4 +1,4 @@
-# taken from example on https://www.rplumber.io/
+# myfile.R
 
 #* @get /mean
 normalMean <- function(samples=10){
