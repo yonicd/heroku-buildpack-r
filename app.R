@@ -2,7 +2,7 @@ library(plumber)
 
 port <- Sys.getenv('PORT')
 
-r <- plumber::plumb("app/myfile.R")
+r <- plumber::plumb("/app/myfile.R")
 
 if(Sys.getenv("PORT") == "") Sys.setenv(PORT = 8000)
 
