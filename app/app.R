@@ -4,4 +4,4 @@ port <- Sys.getenv('PORT')
 
 r <- plumber::plumb("app/myfile.R")
 
-r$run(host='0.0.0.0', port=strtoi(port))
+r$run(host='0.0.0.0', port=strtoi(port),swagger = TRUE)
