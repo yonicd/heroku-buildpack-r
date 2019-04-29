@@ -23,7 +23,7 @@ addTwo <- function(a, b){
 #* @get /clones
 clones <- function(owner,repo,stat){
   
-  sum(fetch_data(owner, repo, type = 'clones', stat = stat))
+  sum(fetch_data(owner = owner, repo = repo, type = 'clones', stat = stat))
   
   
 }
@@ -36,7 +36,7 @@ clones <- function(owner,repo,stat){
 #* @get /views
 views <- function(owner, repo, stat){
   
-  sum(fetch_data(owner, repo, type = 'views', stat = stat))
+  sum(fetch_data(owner = owner, repo = repo, type = 'views', stat = stat))
   
 }
 
