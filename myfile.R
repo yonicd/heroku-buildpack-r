@@ -16,7 +16,7 @@ addTwo <- function(a, b){
 }
 
 #* Github Clones
-#* @html
+#* @serializer unboxedJSON
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
@@ -29,7 +29,7 @@ clones <- function(owner,repo,stat){
 }
 
 #* Github Views
-#* @html
+#* @serializer unboxedJSON
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
