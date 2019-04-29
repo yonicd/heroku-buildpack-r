@@ -21,8 +21,9 @@ addTwo <- function(a, b){
 #* @get /clones
 clones <- function(repo = 'yonicd/whereami',stat = 'uniques'){
   
-  fetch_data(repo, type = 'clones', stat = stat)
+  x <- fetch_data(repo, type = 'clones', stat = stat)
   
+  sprintf('https://img.shields.io/badge/clones-%s-f39f37.svg',x[1])
 }
 
 #* Github Views
