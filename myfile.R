@@ -16,6 +16,7 @@ addTwo <- function(a, b){
 }
 
 #* Github Clones
+#* @html
 #* @param repo github owner/repo
 #* @param stat uniques or count
 #* @get /clones
