@@ -14,3 +14,26 @@ normalMean <- function(samples=10){
 addTwo <- function(a, b){
   as.numeric(a) + as.numeric(b)
 }
+
+#* Github Clones
+#* @param owner github owner
+#* @param repo github repo
+#* @param stat uniques or count
+#* @get /clones
+clones <- function(repo = 'yonicd/whereami',stat = 'uniques'){
+  
+  fetch_view_data(repo, type = 'clones', stat = stat)
+  
+}
+
+#* Github Views
+#* @param owner github owner
+#* @param repo github repo
+#* @param stat uniques or count
+#* @get /views
+views <- function(repo = 'yonicd/whereami',stat = 'uniques'){
+  
+  fetch_view_data(repo, type = 'views', stat = stat)
+  
+}
+
