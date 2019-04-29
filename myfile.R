@@ -17,24 +17,26 @@ addTwo <- function(a, b){
 
 #* Github Clones
 #* @html
-#* @param repo github owner/repo
+#* @param owner github owner
+#* @param repo github repo
 #* @param stat uniques or count
 #* @get /clones
-clones <- function(repo = 'yonicd/whereami',stat = 'uniques'){
+clones <- function(owner='yonicd',repo = 'whereami',stat = 'uniques'){
   
-  sum(fetch_data(repo, type = 'clones', stat = stat))
+  sum(fetch_data(owner, repo, type = 'clones', stat = stat))
   
   
 }
 
 #* Github Views
 #* @html
-#* @param repo github owner/repo
+#* @param owner github owner
+#* @param repo github repo
 #* @param stat uniques or count
 #* @get /views
-views <- function(repo = 'yonicd/whereami',stat = 'uniques'){
+views <- function(owner='yonicd',repo = 'whereami',stat = 'uniques'){
   
-  sum(fetch_data(repo, type = 'views', stat = stat))
+  sum(fetch_data(owner, repo, type = 'views', stat = stat))
   
 }
 
