@@ -16,23 +16,25 @@ addTwo <- function(a, b){
 }
 
 #* Github Clones
+#* @html
 #* @param repo github owner/repo
 #* @param stat uniques or count
 #* @get /clones
 clones <- function(repo = 'yonicd/whereami',stat = 'uniques'){
   
-  x <- fetch_data(repo, type = 'clones', stat = stat)
+  sum(fetch_data(repo, type = 'clones', stat = stat))
   
-  browseURL(sprintf('https://img.shields.io/badge/clones-%s-f39f37.svg',x[1]))
+  
 }
 
 #* Github Views
+#* @html
 #* @param repo github owner/repo
 #* @param stat uniques or count
 #* @get /views
 views <- function(repo = 'yonicd/whereami',stat = 'uniques'){
   
-  fetch_data(repo, type = 'views', stat = stat)
+  sum(fetch_data(repo, type = 'views', stat = stat))
   
 }
 
