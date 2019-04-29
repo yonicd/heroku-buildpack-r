@@ -1,7 +1,7 @@
 library(plumber)
 library(gh)
 
-fetch_view_data <- function(repo, type = c('views','clones'),stat = c('count','uniques')){
+fetch_data <- function(repo, type = c('views','clones'),stat = c('count','uniques')){
 
   this_dat <- gh::gh('/repos/:owner/:repo/traffic/:type',
                      owner  = dirname(repo),
