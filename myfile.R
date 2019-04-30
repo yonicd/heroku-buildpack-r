@@ -72,5 +72,22 @@ function(req, res) {
 #' @get /docs2
 #* @html
 docs2 <- function() {
-  markdown::markdownToHTML(text = '![](https://github.com/yonicd/whereami/blob/media/whereami_shiny.gif?raw=true)')
+  
+  tbl <- data.frame(owner = 'yonicd',
+                    repo = c('whereami','carbonate'),
+                    stringsAsFactors = FALSE)
+  
+  tbl$views <- NA
+  tbl$clones <- NA
+  
+  for(i in 1:nrow(tbl)){
+  tbl$views[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
+                      sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'counts'))
+                      )
+  
+  tbl$clones[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
+                       sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'counts')))
+  }
+  
+  markdown::markdownToHTML(text = knitr::kable(tbl),output = tf1)
 }
