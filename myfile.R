@@ -78,15 +78,25 @@ dashboard <- function() {
                     stringsAsFactors = FALSE)
   
   tbl$views <- NA
+  tbl$viewers <- NA
   tbl$clones <- NA
+  tbl$cloners <- NA
   
   for(i in 1:nrow(tbl)){
+    
   tbl$views[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
                       sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'counts'))
                       )
   
+  tbl$viewers[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
+                          sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'uniques'))
+  )
+  
   tbl$clones[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
                        sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'counts')))
+  
+  tbl$cloners[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
+                           sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'uniques')))
   }
   
   markdown::markdownToHTML(text = knitr::kable(tbl))
