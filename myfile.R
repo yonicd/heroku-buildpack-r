@@ -63,8 +63,14 @@ function(owner, repo, type, req, res) {
   
   stat <- 'count'
   
-  if(type%in%c('viewers','cloners')){
+  if(type=='viewers'){
     stat <- 'uniques'
+    type <- 'views'
+  }
+  
+  if(type=='cloners'){
+    stat <- 'uniques'
+    type <- 'clones'
   }
   
   x <- sum(fetch_data(owner = owner, repo = repo, type = type, stat = stat))
