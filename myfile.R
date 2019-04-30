@@ -64,8 +64,18 @@ function(owner, repo, stat, type, req, res) {
   x <- sum(fetch_data(owner = owner, repo = repo, type = type, stat = stat))
   uri <- sprintf("https://img.shields.io/badge/%s-%s-9cf.svg",type,x)
   
+  fivemin <- format(
+    Sys.time() + (5*60),
+    '%a, %d %b %Y %H:%M:%S',
+    tz = 'GMT',
+    usetz = TRUE
+  )
+  
+  
   res$status <- 303 # redirect
   res$setHeader("Location", uri)
+  res$setHeader("Expires",fivemin)
+  res$setHeader("Cache-Control","max-age=300, public")
   
   res$body <- sprintf('<html>
   <head>
