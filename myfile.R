@@ -31,8 +31,7 @@ views <- function(owner, repo, stat){
 #* Github Clones Data
 #* @param owner github owner
 #* @param repo github repo
-#* @param type type of data clones or views
-#* @get /data
+#* @get /data/<type>
 repo_data <- function(owner,repo,type){
   
   get_data(owner = owner, repo = repo, type = type)
@@ -42,24 +41,31 @@ repo_data <- function(owner,repo,type){
 #* heartbeat
 #* @html
 #* @get /heartbeat
-heartbeat <- function(){
-  '{
+heartbeat <- function(req,res){
+  res$body <- '{
     "routes": [
       "/docs (GET)",
       "/heartbeat (GET)",
-      "/clones (GET)",
-      "/views (GET)",
-      "/data  (GET)"
+      "/badge/<views|clones|cloners|viewers> (GET)",
+      "/data/<views|clones>  (GET)",
+      "/dashboard  (GET)"
       ]
   }'
+  
+  res
 }
 
 #* @param owner github owner
 #* @param repo github repo
-#* @param stat uniques or count
 #* @get /badge/<type>
 #* @html
-function(owner, repo, stat, type, req, res) {
+function(owner, repo, type, req, res) {
+  
+  stat <- 'count'
+  
+  if(type%in%c('viewers','cloners')){
+    stat <- 'uniques'
+  }
   
   x <- sum(fetch_data(owner = owner, repo = repo, type = type, stat = stat))
   uri <- sprintf("https://img.shields.io/badge/%s-%s-9cf.svg",type,x)
