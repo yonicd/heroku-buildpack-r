@@ -1,7 +1,7 @@
 # myfile.R
 
 #* Github Clones
-#* @serializer contentType list(type="image/svg+xml")
+#* @html
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
@@ -10,14 +10,12 @@ clones <- function(owner,repo,stat){
   
   x <- sum(fetch_data(owner = owner, repo = repo, type = 'clones', stat = stat))
   
-  s <- build_svg('clones',x)
-  
-  paste0("data:image/svg+xml;utf8,",as.character(xml2::read_xml(s)))
+  build_svg('clones',x)
   
 }
 
 #* Github Views
-#* @serializer contentType list(type="image/svg+xml")
+#* @html
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
@@ -26,8 +24,7 @@ views <- function(owner, repo, stat){
   
   x <- sum(fetch_data(owner = owner, repo = repo, type = 'views', stat = stat))
   
-  s <- build_svg('views',x)
+  build_svg('views',x)
   
-  paste0("data:image/svg+xml;utf8,",as.character(xml2::read_xml(s)))
 }
 
