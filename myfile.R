@@ -69,9 +69,9 @@ function(req, res) {
 </html>"
 }
 
-#' @get /docs2
+#' @get /dashboard
 #* @html
-docs2 <- function() {
+dashboard <- function() {
   
   tbl <- data.frame(owner = 'yonicd',
                     repo = c('whereami','carbonate'),
@@ -89,5 +89,5 @@ docs2 <- function() {
                        sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'counts')))
   }
   
-  markdown::markdownToHTML(text = knitr::kable(tbl),output = tf1)
+  markdown::markdownToHTML(text = knitr::kable(tbl))
 }
