@@ -28,3 +28,14 @@ views <- function(owner, repo, stat){
   
 }
 
+#* Github Clones Data
+#* @param owner github owner
+#* @param repo github repo
+#* @param type type of data clones or views
+#* @get /repo_data
+repo_data <- function(owner,repo,type){
+  
+  get_data(owner = owner, repo = repo, type = type)
+  
+}
+

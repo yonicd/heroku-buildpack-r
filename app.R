@@ -1,12 +1,17 @@
 library(plumber)
 library(gh)
 
-fetch_data <- function(owner, repo, type = c('views','clones'),stat = c('count','uniques')){
-
-  this_dat <- gh::gh('/repos/:owner/:repo/traffic/:type',
+get_data <- function(owner, repo, type){
+  
+  gh::gh('/repos/:owner/:repo/traffic/:type',
                      owner  = owner,
                      repo   = repo,
                      type   = type)
+}
+
+fetch_data <- function(owner, repo, type = c('views','clones'),stat = c('count','uniques')){
+
+  this_dat <- get_data(owner  = owner, repo   = repo, type   = type)
   
   if(length(this_dat[[type]])==0)
     return(NULL)
