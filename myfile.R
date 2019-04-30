@@ -57,12 +57,13 @@ heartbeat <- function(){
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
-#* @get /test
+#* @param type clones or views
+#* @get /badge/<type>
 #* @html
-function(owner, repo, stat,req, res) {
+function(owner, repo, stat, type, req, res) {
   
-  x <- sum(fetch_data(owner = owner, repo = repo, type = 'views', stat = stat))
-  uri <- sprintf("https://img.shields.io/badge/views-%s-9cf.svg",x)
+  x <- sum(fetch_data(owner = owner, repo = repo, type = type, stat = stat))
+  uri <- sprintf("https://img.shields.io/badge/%s-%s-9cf.svg",type,x)
   
   res$status <- 303 # redirect
   res$setHeader("Location", uri)
