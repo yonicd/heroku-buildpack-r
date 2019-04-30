@@ -42,15 +42,14 @@ repo_data <- function(owner,repo,type){
 #* @html
 #* @get /heartbeat
 heartbeat <- function(req,res){
-  res$body <- '{
+res$body <- '{
     "routes": [
-      "/docs (GET)",
       "/heartbeat (GET)",
       "/badge/<views|clones|cloners|viewers> (GET)",
       "/data/<views|clones>  (GET)",
       "/dashboard  (GET)"
       ]
-  }'
+}'
   
   res
 }
@@ -62,7 +61,8 @@ heartbeat <- function(req,res){
 function(owner, repo, type, req, res) {
   
   stat <- 'count'
-  
+  fixtype <- type
+    
   if(type=='viewers'){
     stat <- 'uniques'
     fixtype <- 'views'
