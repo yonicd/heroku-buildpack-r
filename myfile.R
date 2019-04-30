@@ -1,7 +1,7 @@
 # myfile.R
 
 #* Github Clones
-#* @html
+#* @serializer contentType list(type="image/svg+xml")
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
@@ -15,7 +15,7 @@ clones <- function(owner,repo,stat){
 }
 
 #* Github Views
-#* @html
+#* @serializer contentType list(type="image/svg+xml")
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
