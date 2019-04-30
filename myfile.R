@@ -88,14 +88,14 @@ dashboard <- function() {
                       sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'counts'))
                       )
   
-  tbl$viewers[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
+  tbl$viewers[i] <- sprintf('![](https://img.shields.io/badge/viewers-%s-9cf.svg)',
                           sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'uniques'))
   )
   
   tbl$clones[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
                        sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'counts')))
   
-  tbl$cloners[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
+  tbl$cloners[i] <- sprintf('![](https://img.shields.io/badge/cloners-%s-9cf.svg)',
                            sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'uniques')))
   }
   
