@@ -54,19 +54,28 @@ heartbeat <- function(){
   }'
 }
 
-#' @get /docs
-#' @html
-function(req, res) {
+#* @param owner github owner
+#* @param repo github repo
+#* @param stat uniques or count
+#* @get /test
+#* @html
+function(owner, repo, stat,req, res) {
+  
+  x <- sum(fetch_data(owner = owner, repo = repo, type = 'views', stat = stat))
+  uri <- sprintf("https://img.shields.io/badge/views-%s-9cf.svg",x)
+  
   res$status <- 303 # redirect
-  res$setHeader("Location", "https://img.shields.io/badge/clones-132-9cf.svg")
-  "<html>
+  res$setHeader("Location", uri)
+  
+  sprintf('<html>
   <head>
-    <meta http-equiv=\"Refresh\" content=\"0; url=https://img.shields.io/badge/clones-132-9cf.svg\" />
+    <meta http-equiv=\"Refresh\" content=\"0; url=%s\" />
   </head>
   <body>
-    <p>Please follow <a href=\"https://img.shields.io/badge/clones-132-9cf.svg\">this link</a>.</p>
+    <p>Please follow <a href=\"%s\">this link</a>.</p>
   </body>
-</html>"
+</html>',uri,uri)
+  
 }
 
 #' @get /dashboard
