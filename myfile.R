@@ -65,15 +65,15 @@ function(owner, repo, type, req, res) {
   
   if(type=='viewers'){
     stat <- 'uniques'
-    type <- 'views'
+    fixtype <- 'views'
   }
   
   if(type=='cloners'){
     stat <- 'uniques'
-    type <- 'clones'
+    fixtype <- 'clones'
   }
   
-  x <- sum(fetch_data(owner = owner, repo = repo, type = type, stat = stat))
+  x <- sum(fetch_data(owner = owner, repo = repo, type = fixtype, stat = stat))
   uri <- sprintf("https://img.shields.io/badge/%s-%s-9cf.svg",type,x)
   
   fivemin <- format(
