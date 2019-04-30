@@ -67,7 +67,7 @@ function(owner, repo, stat,req, res) {
   res$status <- 303 # redirect
   res$setHeader("Location", uri)
   
-  sprintf('<html>
+  res$body <- sprintf('<html>
   <head>
     <meta http-equiv=\"Refresh\" content=\"0; url=%s\" />
   </head>
@@ -75,6 +75,8 @@ function(owner, repo, stat,req, res) {
     <p>Please follow <a href=\"%s\">this link</a>.</p>
   </body>
 </html>',uri,uri)
+  
+  res
   
 }
 
