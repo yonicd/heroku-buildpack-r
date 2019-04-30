@@ -22,13 +22,6 @@ fetch_data <- function(owner, repo, type = c('views','clones'),stat = c('count',
   
 }
 
-build_svg <- function(type,value){
-  tf <- tempfile(fileext = '.svg')
-  on.exit(unlink(tf))
-  download.file(sprintf('https://img.shields.io/badge/%s-%s-9cf.svg',type,value),destfile = tf)
-  readLines(tf,warn = FALSE)
-}
-
 port <- Sys.getenv('PORT')
 
 r <- plumber::plumb("/app/myfile.R")
