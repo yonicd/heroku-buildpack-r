@@ -73,8 +73,8 @@ function(req, res) {
 #* @html
 dashboard <- function() {
   
-  tbl <- data.frame(owner = 'yonicd',
-                    repo = c('whereami','carbonate'),
+  tbl <- data.frame(owner = c('yonicd','yonicd','thinkr-open','metrumresearchgroup'),
+                    repo = c('whereami','carbonate','remedy','covrpage'),
                     stringsAsFactors = FALSE)
   
   tbl$views <- NA
