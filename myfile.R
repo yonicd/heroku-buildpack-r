@@ -57,7 +57,6 @@ heartbeat <- function(){
 #* @param owner github owner
 #* @param repo github repo
 #* @param stat uniques or count
-#* @param type clones or views
 #* @get /badge/<type>
 #* @html
 function(owner, repo, stat, type, req, res) {
