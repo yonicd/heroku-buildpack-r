@@ -71,6 +71,6 @@ function(req, res) {
 
 #' @get /docs2
 #* @html
-function() {
+docs2 <- function() {
   markdown::markdownToHTML(text = '![](https://github.com/yonicd/whereami/blob/media/whereami_shiny.gif?raw=true)')
 }
