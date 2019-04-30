@@ -58,13 +58,13 @@ heartbeat <- function(){
 #' @html
 function(req, res) {
   res$status <- 303 # redirect
-  res$setHeader("Location", "https://github.com")
+  res$setHeader("Location", "https://img.shields.io/badge/clones-132-9cf.svg")
   "<html>
   <head>
-    <meta http-equiv=\"Refresh\" content=\"0; url=https://github.com\" />
+    <meta http-equiv=\"Refresh\" content=\"0; url=https://img.shields.io/badge/clones-132-9cf.svg\" />
   </head>
   <body>
-    <p>Please follow <a href=\"https://github.com/\">this link</a>.</p>
+    <p>Please follow <a href=\"https://img.shields.io/badge/clones-132-9cf.svg\">this link</a>.</p>
   </body>
 </html>"
 }
