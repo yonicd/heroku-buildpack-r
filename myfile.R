@@ -33,7 +33,9 @@ function(owner, repo,req, res) {
   
   txt <- badge_text(content[length(content)],content[3])
   
-  uri <- sprintf("https://img.shields.io/badge/%s",txt)
+  uri_md <- tiny(dat$html_url)
+  
+  uri <- sprintf("https://img.shields.io/badge/%s?link=https://github.com/metrumresearchgroup/covrpage&link=%s",txt,uri_md)
   
   fivemin <- format(
     Sys.time() + (5*60),
