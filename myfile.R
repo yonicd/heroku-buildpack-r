@@ -14,9 +14,7 @@ repos <- function(){
 
 #* tiny url to owner/repo/tests/README.md
 #* @serializer unboxedJSON
-#* @param owner github owner
-#* @param repo github repo
-#* @get /url
+#* @get /url/<owner>/<repo>
 url <- function(owner, repo, req, res){
   
   dat <- get_repo_data(owner,repo)
@@ -25,9 +23,7 @@ url <- function(owner, repo, req, res){
   
 }
 
-#* @param owner github owner
-#* @param repo github repo
-#* @get /badge
+#* @get /badge/<owner>/<repo>
 #* @html
 function(owner, repo,req, res) {
   
