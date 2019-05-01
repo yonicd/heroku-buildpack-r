@@ -19,7 +19,29 @@ url <- function(owner, repo, req, res){
   
   dat <- get_repo_data(owner,repo)
   
-  res$body <- tiny(dat$html_url)
+  uri <- tiny(dat$html_url)
+  
+  fivemin <- format(
+    Sys.time() + (5*60),
+    '%a, %d %b %Y %H:%M:%S',
+    tz = 'GMT',
+    usetz = TRUE
+  )
+  
+  
+  res$status <- 303 # redirect
+  res$setHeader("Location", uri)
+  res$setHeader("Expires",fivemin)
+  res$setHeader("Cache-Control","max-age=300, public")
+  
+  res$body <- sprintf('<html>
+  <head>
+    <meta http-equiv=\"Refresh\" content=\"0; url=%s\" />
+  </head>
+  <body>
+    <p>Please follow <a href=\"%s\">this link</a>.</p>
+  </body>
+</html>',uri,uri)
   
   res
 }
