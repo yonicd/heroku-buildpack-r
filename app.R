@@ -1,25 +1,57 @@
 library(plumber)
 library(gh)
+library(RCurl)
 
-get_data <- function(owner, repo, type){
+get_repo_data <- function(owner, repo){
   
-  gh::gh('/repos/:owner/:repo/traffic/:type',
-                     owner  = owner,
-                     repo   = repo,
-                     type   = type)
+  gh::gh('/repos/:owner/:repo/contents/tests/README.md',
+         owner = owner,
+         repo = repo)
 }
 
-fetch_data <- function(owner, repo, type = c('views','clones'),stat = c('count','uniques')){
+get_content <- function(obj){
+  
+  content <- sapply(strsplit(obj$content,'\n')[[1]],RCurl::base64Decode)
+  
+  content <- paste0(content,collapse = '')
+    
+  unlist(strsplit(content,'\n'))
+  
+}
 
-  this_dat <- get_data(owner  = owner, repo   = repo, type   = type)
+badge_text <- function(status = "pass",date = Sys.Date()) {
   
-  if(length(this_dat[[type]])==0)
-    return(NULL)
+  uri_colour <- switch(status,
+                       "<!--- error/failed --->" = "red",
+                       "<!--- skipped/warning --->" = "yellowgreen",
+                       "brightgreen"
+  )
   
-  stat_num <- ifelse(stat=='count',2,3)
+  uri_date <- format(as.Date(date,format = '%d %B, %Y %H:%M:%S'),'%Y_%m_%d')
+  
+  sprintf("covrpage-Last_Build_%s-%s.svg", uri_date, uri_colour)
+}
 
-  sapply(this_dat[[type]],`[[`,stat_num)
+
+tiny <- function(uri) {
   
+  host <- "tinyurl.com"
+  
+  if (!is.null(curl::nslookup(host, error = FALSE))) {
+    
+    base <- sprintf("http://%s/api-create.php", host)
+    
+    x <- curl::curl(sprintf("%s?url=%s", base, uri))
+    
+    on.exit(close(x), add = TRUE)
+    
+    uri_raw <- uri
+    
+    uri <- readLines(x, warn = FALSE)
+    
+  }
+  
+  uri
 }
 
 port <- Sys.getenv('PORT')

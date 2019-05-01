@@ -1,52 +1,43 @@
 # myfile.R
 
-#* Github Clones Data
-#* @param owner github owner
-#* @param repo github repo
-#* @get /data/<type>
-repo_data <- function(owner,repo,type){
-  
-  get_data(owner = owner, repo = repo, type = type)
-  
-}
+#* Github repos using covrpage
+#* @get /repos
+repos <- function(){
 
-#* heartbeat
-#* @html
-#* @get /heartbeat
-heartbeat <- function(req,res){
-res$body <- '{
-    "routes": [
-      "/heartbeat (GET)",
-      "/badge/<views|clones|cloners|viewers> (GET)",
-      "/data/<views|clones>  (GET)",
-      "/dashboard  (GET)"
-      ]
-}'
+  out <- gh::gh('/search/code?q=covrpage+filename:README.md+path:tests')
   
-  res
-}
+  x <- sapply(out$items,function(x) x$repository$full_name)
 
-#* @param owner github owner
-#* @param repo github repo
-#* @get /badge/<type>
-#* @html
-function(owner, repo, type, req, res) {
-  
-  stat <- 'count'
-  fixtype <- type
+  list(total_count = out$total_count, repos = x)
     
-  if(type=='viewers'){
-    stat <- 'uniques'
-    fixtype <- 'views'
-  }
+}
+
+#* tiny url to owner/repo/tests/README.md
+#* @serializer unboxedJSON
+#* @param owner github owner
+#* @param repo github repo
+#* @get /url
+url <- function(owner, repo, req, res){
   
-  if(type=='cloners'){
-    stat <- 'uniques'
-    fixtype <- 'clones'
-  }
+  dat <- get_repo_data(owner,repo)
   
-  x <- sum(fetch_data(owner = owner, repo = repo, type = fixtype, stat = stat))
-  uri <- sprintf("https://img.shields.io/badge/%s-%s-9cf.svg",type,x)
+  tiny(dat$html_url)
+  
+}
+
+#* @param owner github owner
+#* @param repo github repo
+#* @get /badge
+#* @html
+function(owner, repo,req, res) {
+  
+  dat <- get_repo_data(owner,repo)
+  
+  content <- get_content(dat)
+  
+  txt <- badge_text(content[length(content)],content[3])
+  
+  uri <- sprintf("https://img.shields.io/badge/%s",txt)
   
   fivemin <- format(
     Sys.time() + (5*60),
@@ -72,37 +63,4 @@ function(owner, repo, type, req, res) {
   
   res
   
-}
-
-#' @get /dashboard
-#* @html
-dashboard <- function() {
-  
-  tbl <- data.frame(owner = c('yonicd','yonicd','thinkr-open','metrumresearchgroup'),
-                    repo = c('whereami','carbonate','remedy','covrpage'),
-                    stringsAsFactors = FALSE)
-  
-  tbl$views <- NA
-  tbl$viewers <- NA
-  tbl$clones <- NA
-  tbl$cloners <- NA
-  
-  for(i in 1:nrow(tbl)){
-    
-  tbl$views[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
-                      sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'count'))
-                      )
-  
-  tbl$viewers[i] <- sprintf('![](https://img.shields.io/badge/viewers-%s-9cf.svg)',
-                          sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'uniques'))
-  )
-  
-  tbl$clones[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
-                       sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'count')))
-  
-  tbl$cloners[i] <- sprintf('![](https://img.shields.io/badge/cloners-%s-9cf.svg)',
-                           sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'uniques')))
-  }
-  
-  markdown::markdownToHTML(text = knitr::kable(tbl))
 }
