@@ -22,8 +22,8 @@ get_content <- function(obj){
 badge_text <- function(status = "pass",date = Sys.Date()) {
   
   uri_colour <- switch(status,
-                       "<!--- error/failed --->" = "red",
-                       "<!--- skipped/warning --->" = "yellowgreen",
+                       "<!--- Final Status : error/failed --->" = "red",
+                       "<!--- Final Status : skipped/warning --->" = "yellowgreen",
                        "brightgreen"
   )
   
