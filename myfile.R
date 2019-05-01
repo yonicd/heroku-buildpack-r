@@ -13,14 +13,15 @@ repos <- function(){
 }
 
 #* tiny url to owner/repo/tests/README.md
-#* @serializer unboxedJSON
+#* @html
 #* @get /url/<owner>/<repo>
 url <- function(owner, repo, req, res){
   
   dat <- get_repo_data(owner,repo)
   
-  tiny(dat$html_url)
+  res$body <- tiny(dat$html_url)
   
+  res
 }
 
 #* @get /badge/<owner>/<repo>
