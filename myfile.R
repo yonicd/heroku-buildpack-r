@@ -15,8 +15,8 @@ heartbeat <- function(req,res){
 res$body <- '{
     "routes": [
       "/heartbeat (GET)",
-      "/badge/<views|clones|cloners|viewers> (GET)",
-      "/data/<views|clones>  (GET)",
+      "/badge/<owner>/<repo>/<views|clones|cloners|viewers> (GET)",
+      "/data/<owner>/<repo>/<views|clones>  (GET)",
       "/dashboard  (GET)"
       ]
 }'
