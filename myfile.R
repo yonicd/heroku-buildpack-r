@@ -1,9 +1,7 @@
 # myfile.R
 
 #* Github Clones Data
-#* @param owner github owner
-#* @param repo github repo
-#* @get /data/<type>
+#* @get /data/<repo>/<owner>/<type>
 repo_data <- function(owner,repo,type){
   
   get_data(owner = owner, repo = repo, type = type)
@@ -26,9 +24,7 @@ res$body <- '{
   res
 }
 
-#* @param owner github owner
-#* @param repo github repo
-#* @get /badge/<type>
+#* @get /badge/<owner>/<repo>/<type>
 #* @html
 function(owner, repo, type, req, res) {
   
@@ -78,30 +74,44 @@ function(owner, repo, type, req, res) {
 #* @html
 dashboard <- function() {
   
-  tbl <- data.frame(owner = c('yonicd','yonicd','thinkr-open','metrumresearchgroup'),
-                    repo = c('whereami','carbonate','remedy','covrpage'),
+  tbl <- data.frame(repo = c('yonicd/whereami',
+                             'yonicd/carbonate',
+                             'thinkr-open/remedy',
+                             'metrumresearchgroup/covrpage'),
                     stringsAsFactors = FALSE)
   
-  tbl$views <- NA
+  tbl$views   <- NA
   tbl$viewers <- NA
-  tbl$clones <- NA
+  tbl$clones  <- NA
   tbl$cloners <- NA
   
   for(i in 1:nrow(tbl)){
     
   tbl$views[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
-                      sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'count'))
+                      sum(fetch_data(owner = dirname(tbl$repo[i]),
+                                     repo  = basename(tbl$repo[i]),
+                                     type  = 'views',
+                                     stat  = 'count'))
                       )
   
   tbl$viewers[i] <- sprintf('![](https://img.shields.io/badge/viewers-%s-9cf.svg)',
-                          sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'views', stat = 'uniques'))
+                          sum(fetch_data(owner = dirname(tbl$repo[i]),
+                                         repo  = basename(tbl$repo[i]),
+                                         type  = 'views',
+                                         stat  = 'uniques'))
   )
   
   tbl$clones[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
-                       sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'count')))
+                       sum(fetch_data(owner = dirname(tbl$repo[i]),
+                                      repo  = basename(tbl$repo[i]),
+                                      type  = 'clones',
+                                      stat  = 'count')))
   
   tbl$cloners[i] <- sprintf('![](https://img.shields.io/badge/cloners-%s-9cf.svg)',
-                           sum(fetch_data(owner = tbl$owner[i], repo = tbl$repo[i], type = 'clones', stat = 'uniques')))
+                           sum(fetch_data(owner = dirname(tbl$repo[i]),
+                                          repo  = basename(tbl$repo[i]),
+                                          type  = 'clones',
+                                          stat  = 'uniques')))
   }
   
   markdown::markdownToHTML(text = knitr::kable(tbl))
