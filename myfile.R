@@ -1,7 +1,7 @@
 # myfile.R
 
 #* Github Clones Data
-#* @get /data/<repo>/<owner>/<type>
+#* @get /data/<owner>/<repo>/<type>
 repo_data <- function(owner,repo,type){
   
   get_data(owner = owner, repo = repo, type = type)
