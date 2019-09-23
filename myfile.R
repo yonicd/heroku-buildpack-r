@@ -1,60 +1,50 @@
 # myfile.R
 
-#* Github Clones Data
-#* @get /data/<owner>/<repo>/<type>
-repo_data <- function(owner,repo,type){
+#* start
+#* @get /start
+ask <- function(req,res){
   
-  get_data(owner = owner, repo = repo, type = type)
-  
+  httr::GET(url = "https://slack.com/oauth/authorize",
+                         encode = 'json',
+                         config =
+                           httr::add_headers(
+                             "client_id"     = Sys.getenv('SLACK_CLIENT_ID'),
+                             "scope"          =  paste0(scopes(),collapse = ','),
+                             "redirect_uri"  = "http://localhost:3000/slack/auth/redirect"
+                           ),
+                         body = FALSE,
+                         httr::verbose()
+  )
 }
 
-#* heartbeat
-#* @html
-#* @get /heartbeat
-heartbeat <- function(req,res){
-res$body <- '{
-    "routes": [
-      "/heartbeat (GET)",
-      "/badge/<owner>/<repo>/<views|clones|cloners|viewers> (GET)",
-      "/data/<owner>/<repo>/<views|clones>  (GET)",
-      "/dashboard  (GET)"
-      ]
-}'
+#* submit
+#* @post /slack/auth/redirect
+auth <- function(req,res){
   
-  res
-}
-
-#* @get /badge/<owner>/<repo>/<type>
-#* @html
-function(owner, repo, type, req, res) {
+  signing_secret <- Sys.getenv('SLACK_SIGNING_SECRET')
   
-  stat <- 'count'
-  fixtype <- type
-    
-  if(type=='viewers'){
-    stat <- 'uniques'
-    fixtype <- 'views'
-  }
+  slack_code <- req$code
   
-  if(type=='cloners'){
-    stat <- 'uniques'
-    fixtype <- 'clones'
-  }
-  
-  x <- sum(fetch_data(owner = owner, repo = repo, type = fixtype, stat = stat))
-  uri <- sprintf("https://img.shields.io/badge/%s-%s-9cf.svg",type,x)
-  
-  fivemin <- format(
-    Sys.time() + (5*60),
-    '%a, %d %b %Y %H:%M:%S',
-    tz = 'GMT',
-    usetz = TRUE
+  post_req <- httr::POST(url = "https://slack.com/api/oauth.access",
+                         encode = 'form',
+                         config = list(
+                           httr::authenticate(
+                             Sys.getenv('SLACK_CLIENT_ID'),
+                             Sys.getenv('SLACK_CLIENT_SECRET')
+                          ),
+                           httr::add_headers(
+                           "code"          =  slack_code,
+                           "redirect_uri"  = "http://localhost:3000/slack/auth/redirect"
+                         )),
+                         body = FALSE,
+                         httr::verbose()
   )
   
-  
+  uri <- redirect_uri(post_req$app_id)
+
   res$status <- 303 # redirect
   res$setHeader("Location", uri)
-  res$setHeader("Expires",fivemin)
+  res$setHeader("Expires",fivemin())
   res$setHeader("Cache-Control","max-age=300, public")
   
   res$body <- sprintf('<html>
@@ -68,51 +58,4 @@ function(owner, repo, type, req, res) {
   
   res
   
-}
-
-#' @get /dashboard
-#* @html
-dashboard <- function() {
-  
-  tbl <- data.frame(repo = c('yonicd/whereami',
-                             'yonicd/carbonate',
-                             'thinkr-open/remedy',
-                             'metrumresearchgroup/covrpage'),
-                    stringsAsFactors = FALSE)
-  
-  tbl$views   <- NA
-  tbl$viewers <- NA
-  tbl$clones  <- NA
-  tbl$cloners <- NA
-  
-  for(i in 1:nrow(tbl)){
-    
-  tbl$views[i] <- sprintf('![](https://img.shields.io/badge/views-%s-9cf.svg)',
-                      sum(fetch_data(owner = dirname(tbl$repo[i]),
-                                     repo  = basename(tbl$repo[i]),
-                                     type  = 'views',
-                                     stat  = 'count'))
-                      )
-  
-  tbl$viewers[i] <- sprintf('![](https://img.shields.io/badge/viewers-%s-9cf.svg)',
-                          sum(fetch_data(owner = dirname(tbl$repo[i]),
-                                         repo  = basename(tbl$repo[i]),
-                                         type  = 'views',
-                                         stat  = 'uniques'))
-  )
-  
-  tbl$clones[i] <- sprintf('![](https://img.shields.io/badge/clones-%s-9cf.svg)',
-                       sum(fetch_data(owner = dirname(tbl$repo[i]),
-                                      repo  = basename(tbl$repo[i]),
-                                      type  = 'clones',
-                                      stat  = 'count')))
-  
-  tbl$cloners[i] <- sprintf('![](https://img.shields.io/badge/cloners-%s-9cf.svg)',
-                           sum(fetch_data(owner = dirname(tbl$repo[i]),
-                                          repo  = basename(tbl$repo[i]),
-                                          type  = 'clones',
-                                          stat  = 'uniques')))
-  }
-  
-  markdown::markdownToHTML(text = knitr::kable(tbl))
 }

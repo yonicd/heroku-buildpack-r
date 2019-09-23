@@ -1,32 +1,52 @@
 library(plumber)
-library(gh)
+library(httr)
 
-get_data <- function(owner, repo, type){
+fivemin <- function(){
   
-  gh::gh('/repos/:owner/:repo/traffic/:type',
-                     owner  = owner,
-                     repo   = repo,
-                     type   = type)
-}
-
-fetch_data <- function(owner, repo, type = c('views','clones'),stat = c('count','uniques')){
-
-  this_dat <- get_data(owner  = owner, repo   = repo, type   = type)
-  
-  if(length(this_dat[[type]])==0)
-    return(NULL)
-  
-  stat_num <- ifelse(stat=='count',2,3)
-
-  sapply(this_dat[[type]],`[[`,stat_num)
+  format(
+    Sys.time() + (5*60),
+    '%a, %d %b %Y %H:%M:%S',
+    tz = 'GMT',
+    usetz = TRUE
+  )
   
 }
 
-port <- Sys.getenv('PORT')
+redirect_uri <- function(app_id){
+  sprintf('https://slack.com/app_redirect?%s',app_id)
+}
 
-r <- plumber::plumb("/app/myfile.R")
+scopes <- function(){
+  c('incoming-webhook',
+              'files:read',
+              'files:write:user',
+              'chat:write:bot',
+              'chat:write:user',
+              'mpim:write',
+              'mpim:read',
+              'mpim:history',
+              'im:write',
+              'im:read',
+              'im:history',
+              'groups:write',
+              'groups:read',
+              'groups:history',
+              'channels:write',
+              'channels:read',
+              'channels:history',
+              'emoji:read',
+              'usergroups:read',
+              'users:read')
+}
 
-if(Sys.getenv("PORT") == "") Sys.setenv(PORT = 8000)
+
+port <- 3000 #Sys.getenv('PORT')
+
+#r <- plumber::plumb("/app/myfile.R")
+
+r <- plumber::plumb("myfile.R")
+
+if(Sys.getenv("PORT") == "") Sys.setenv(PORT = 3000)
 
 r$run(host = "0.0.0.0", port=as.numeric(Sys.getenv("PORT")), swagger = TRUE)
 
