@@ -39,13 +39,11 @@ scopes <- function(){
               'users:read')
 }
 
-port <- 3000 #Sys.getenv('PORT')
+port <- Sys.getenv('PORT')
 
-#r <- plumber::plumb("/app/myfile.R")
+r <- plumber::plumb("/app/myfile.R")
 
-r <- plumber::plumb("myfile.R")
-
-if(Sys.getenv("PORT") == "") Sys.setenv(PORT = 3000)
+if(Sys.getenv("PORT") == "") Sys.setenv(PORT = 8000)
 
 r$run(host = "0.0.0.0", port=as.numeric(Sys.getenv("PORT")), swagger = TRUE)
 
