@@ -13,8 +13,8 @@ auth <- function(req,res){
 auth <- function(req,res){
 
   root <- 'https://slack.com/api/oauth.access'
-  #root_redirect <- 'http://localhost:3000'
   root_redirect <- 'https://slackr-auth.herokuapp.com'
+  # root_redirect <- 'http://localhost:3000'
   
   uri <- sprintf('%s?code=%s&client_id=%s&client_secret=%s&redirect_uri=%s',
                  root,
@@ -40,7 +40,7 @@ auth <- function(req,res){
     cred_key <- store_creds(h)
     
     list(
-      Result: jsonlite::unbox('Success!'),
+      result = jsonlite::unbox('Success!'),
       SLACKR_AUTH_KEY = jsonlite::unbox(cred_key)
     )
     
@@ -51,3 +51,7 @@ auth <- function(req,res){
 # Localhost
 # http://127.0.0.1:3000/auth
 # http://localhost:3000/auth/redirect
+# plumber::plumb(file='myfile.R')$run(port = 3000L,host = '0.0.0.0',swagger = FALSE)
+
+# Heroku
+# https://slackr-auth.herokuapp.com/auth/redirect
