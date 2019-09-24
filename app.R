@@ -5,11 +5,15 @@ library(jsonlite)
 store_creds <- function(h){
   
   if(!file.exists(Sys.getenv('CREDS_PATH'))){
-    jsonlite::write_json(list(),path = Sys.getenv('CREDS_PATH'))
+    
+    creds <- list()
+    
+  }else{
+    
+    creds <- jsonlite::read_json(Sys.getenv('CREDS_PATH'))  
+    
   }
     
-  creds <- jsonlite::read_json(Sys.getenv('CREDS_PATH'))
-  
   if(h$team_name%in%names(creds)){
     
     if(h$user_id%in%names(creds[[h$team_name]])){
