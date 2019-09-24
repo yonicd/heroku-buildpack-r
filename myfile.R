@@ -4,17 +4,15 @@
 #* @get /start
 ask <- function(req,res){
   
-  httr::GET(url = "https://slack.com/oauth/authorize",
-                         encode = 'json',
-                         config =
-                           httr::add_headers(
-                             "client_id"     = Sys.getenv('SLACK_CLIENT_ID'),
-                             "scope"          =  paste0(scopes(),collapse = ','),
-                             "redirect_uri"  = "http://localhost:3000/slack/auth/redirect"
-                           ),
-                         body = FALSE,
-                         httr::verbose()
-  )
+  redirect_uri <- 'https://slackr-auth.herokuapp.com/slack/auth/redirect'
+  
+  uri <- sprintf('https://slack.com/oauth/authorize?client_id=%s&scope=%s',
+                 Sys.getenv('SLACK_CLIENT_ID'),
+                 paste0(scopes(),collapse = ',')
+                 )
+  
+  httr::GET(url = uri,encode = 'json',body = FALSE,httr::verbose())
+  
 }
 
 #* submit
@@ -34,7 +32,7 @@ auth <- function(req,res){
                           ),
                            httr::add_headers(
                            "code"          =  slack_code,
-                           "redirect_uri"  = "http://localhost:3000/slack/auth/redirect"
+                           "redirect_uri"  = "https://slackr-auth.herokuapp.com/slack/auth/redirect"
                          )),
                          body = FALSE,
                          httr::verbose()
