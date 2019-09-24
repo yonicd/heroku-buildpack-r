@@ -4,7 +4,7 @@
 #* @get /auth
 auth <- function(req,res){
   
-  plumber::include_html(file = '/app/add_to_slack.html',res)
+  plumber::include_html(file = 'add_to_slack.html',res)
   
 }
 
