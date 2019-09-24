@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en-US" class=""><head><script type="text/javascript">
+window.dataLayer = window.dataLayer || [];
+window.dataLayer.push({
+	'gtm.start': Date.now(),
+	'event' : 'gtm.js',
+	'secure_page' : false,
+});
+var firstScript = document.getElementsByTagName('script')[0];
+var thisScript = document.createElement('script');
+thisScript.async = true;
+thisScript.src = '//www.googletagmanager.com/gtm.js?id=GTM-KH2LPK';
+firstScript.parentNode.insertBefore(thisScript, firstScript);
+</script><script type="text/javascript">
+document.addEventListener("DOMContentLoaded", function(e) {
+	var gtmDataLayer = window.dataLayer || [];
+	var gtmTags = document.querySelectorAll('*[data-gtm-click]');
+	var gtmClickHandler = function(c) {
+		var gtm_events = this.getAttribute('data-gtm-click');
+		if (!gtm_events) return;
+		var gtm_events_arr = gtm_events.split(",");
+		for(var e=0; e < gtm_events_arr.length; e++) {
+			var ev = gtm_events_arr[e].trim();
+			gtmDataLayer.push({ 'event': ev });
+		}
+	};
+	for(var g=0; g < gtmTags.length; g++){
+		var elem = gtmTags[g];
+		elem.addEventListener('click', gtmClickHandler);
+	}
+});
+</script><script type="text/javascript">
+(function(e,c,b,f,d,g,a){e.SlackBeaconObject=d;
+e[d]=e[d]||function(){(e[d].q=e[d].q||[]).push([1*new Date(),arguments])};
+e[d].l=1*new Date();g=c.createElement(b);a=c.getElementsByTagName(b)[0];
+g.async=1;g.src=f;a.parentNode.insertBefore(g,a)
+})(window,document,"script","https://a.slack-edge.com/bv1-6-e8f5fe3/slack_beacon.5256c1f252f9ae885071.min.js","sb");
+window.sb('set', 'token', '3307f436963e02d4f9eb85ce5159744c');
+window.sb('track', 'pageview');
+</script><meta charset="utf-8">
+<script type="text/javascript">window.location.href = "https:\/\/slack.com\/oauth\/authorize?client_id=220157155520.220159943344&scope=incoming-webhook%2Cfiles%3Aread%2Cfiles%3Awrite%3Auser%2Cchat%3Awrite%3Abot%2Cchat%3Awrite%3Auser%2Cmpim%3Awrite%2Cmpim%3Aread%2Cmpim%3Ahistory%2Cim%3Awrite%2Cim%3Aread%2Cim%3Ahistory%2Cgroups%3Awrite%2Cgroups%3Aread%2Cgroups%3Ahistory%2Cchannels%3Awrite%2Cchannels%3Aread%2Cchannels%3Ahistory%2Cemoji%3Aread%2Cusergroups%3Aread%2Cusers%3Aread&tracked=1";
+</script>
+</head>
+<body></body>
+</html>
