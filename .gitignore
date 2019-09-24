@@ -1,11 +1,9 @@
 .env
 *.log
 *.tar.gz
+*.html
+*.json
 .Rproj.user
-d3Tree
-shinyHeatmapply
-jsTree
-gunflow
 .Rhistory
 heroku-buildpack-r.Rproj
 bin_14

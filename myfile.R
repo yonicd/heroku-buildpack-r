@@ -37,9 +37,12 @@ auth <- function(req,res){
     
   }else{
     
-    store_creds(h)
+    cred_key <- store_creds(h)
     
-    jsonlite::unbox('Success!')
+    list(
+      Result: jsonlite::unbox('Success!'),
+      SLACKR_AUTH_KEY = jsonlite::unbox(cred_key)
+    )
     
   }
   

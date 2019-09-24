@@ -14,38 +14,13 @@ store_creds <- function(h){
     
   }
     
-  if(h$team_name%in%names(creds)){
-    
-    if(h$user_id%in%names(creds[[h$team_name]])){
-      
-      webhookid <- basename(h$incoming_webhook$configuration_url)
-        
-      if(!webhookid%in%names(creds[[h$team_name]][[h$user_id]])){
-        
-        creds[[h$team_name]][[h$user_id]][[webhookid]] <- h
-        
-      }else{
-        
-        return(invisible(NULL))
-        
-      }
-      
-    }else{
-      
-      creds[[h$team_name]][[h$user_id]] <- h
-      
-    }
-    
-  }else{
-    
-    creds[[h$team_name]] <- list()
-    creds[[h$team_name]][[h$user_id]] <- list()
-    webhookid <- basename(h$incoming_webhook$configuration_url)
-    creds[[h$team_name]][[h$user_id]][[webhookid]] <- h
-    
-  }
+  sh <- digest::sha1(h)
+  
+  creds[[sh]] <- h
   
   jsonlite::write_json(creds,path = Sys.getenv('CREDS_PATH'))
+  
+  return(sh)
   
 }
 
