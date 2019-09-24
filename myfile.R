@@ -1,59 +1,50 @@
 # myfile.R
 
-#* start
-#* @get /start
-ask <- function(req,res){
-  
-  redirect_uri <- 'https://slackr-auth.herokuapp.com/slack/auth/redirect'
-  
-  uri <- sprintf('https://slack.com/oauth/authorize?client_id=%s&scope=%s',
-                 Sys.getenv('SLACK_CLIENT_ID'),
-                 paste0(scopes(),collapse = ',')
-                 )
-  
-  httr::GET(url = uri,encode = 'json',body = FALSE,httr::verbose())
-  
-}
-
-#* submit
-#* @post /slack/auth/redirect
+#* auth
+#* @get /auth
 auth <- function(req,res){
   
-  signing_secret <- Sys.getenv('SLACK_SIGNING_SECRET')
-  
-  slack_code <- req$code
-  
-  post_req <- httr::POST(url = "https://slack.com/api/oauth.access",
-                         encode = 'form',
-                         config = list(
-                           httr::authenticate(
-                             Sys.getenv('SLACK_CLIENT_ID'),
-                             Sys.getenv('SLACK_CLIENT_SECRET')
-                          ),
-                           httr::add_headers(
-                           "code"          =  slack_code,
-                           "redirect_uri"  = "https://slackr-auth.herokuapp.com/slack/auth/redirect"
-                         )),
-                         body = FALSE,
-                         httr::verbose()
-  )
-  
-  uri <- redirect_uri(post_req$app_id)
-
-  res$status <- 303 # redirect
-  res$setHeader("Location", uri)
-  res$setHeader("Expires",fivemin())
-  res$setHeader("Cache-Control","max-age=300, public")
-  
-  res$body <- sprintf('<html>
-  <head>
-    <meta http-equiv=\"Refresh\" content=\"0; url=%s\" />
-  </head>
-  <body>
-    <p>Please follow <a href=\"%s\">this link</a>.</p>
-  </body>
-</html>',uri,uri)
-  
-  res
+  plumber::include_html(file = 'add_to_slack.html',res)
   
 }
+
+#* redirect
+#* @get /auth/redirect
+auth <- function(req,res){
+
+  root <- 'https://slack.com/api/oauth.access'
+  #root_redirect <- 'http://localhost:3000'
+  root_redirect <- 'https://slackr-auth.herokuapp.com'
+  
+  uri <- sprintf('%s?code=%s&client_id=%s&client_secret=%s&redirect_uri=%s',
+                 root,
+                 req$args$code,
+                 Sys.getenv('SLACK_CLIENT_ID'),
+                 Sys.getenv('SLACK_CLIENT_SECRET'),
+                 sprintf('%s/auth/redirect',root_redirect))
+  
+  ret <- httr::GET(url = uri,
+            encode = 'json',
+            body = FALSE,
+            httr::verbose()
+  )
+
+  h <- httr::content(ret)
+  
+  if(!h$ok){
+    
+    list(error=jsonlite::unbox(h$error))    
+    
+  }else{
+    
+    store_creds(h)
+    
+    jsonlite::unbox('Success!')
+    
+  }
+  
+}
+
+# Localhost
+# http://127.0.0.1:3000/auth
+# http://localhost:3000/auth/redirect

@@ -1,42 +1,44 @@
 library(plumber)
 library(httr)
+library(jsonlite)
 
-fivemin <- function(){
+store_creds <- function(h){
   
-  format(
-    Sys.time() + (5*60),
-    '%a, %d %b %Y %H:%M:%S',
-    tz = 'GMT',
-    usetz = TRUE
-  )
+  creds <- jsonlite::read_json(Sys.getenv('CREDS_PATH'))
   
-}
-
-redirect_uri <- function(app_id){
-  sprintf('https://slack.com/app_redirect?%s',app_id)
-}
-
-scopes <- function(){
-  c('incoming-webhook',
-              'files:read',
-              'files:write:user',
-              'chat:write:bot',
-              'chat:write:user',
-              'mpim:write',
-              'mpim:read',
-              'mpim:history',
-              'im:write',
-              'im:read',
-              'im:history',
-              'groups:write',
-              'groups:read',
-              'groups:history',
-              'channels:write',
-              'channels:read',
-              'channels:history',
-              'emoji:read',
-              'usergroups:read',
-              'users:read')
+  if(h$team_name%in%names(creds)){
+    
+    if(h$user_id%in%names(creds[[h$team_name]])){
+      
+      webhookid <- basename(h$incoming_webhook$configuration_url)
+        
+      if(!webhookid%in%names(creds[[h$team_name]][[h$user_id]])){
+        
+        creds[[h$team_name]][[h$user_id]][[webhookid]] <- h
+        
+      }else{
+        
+        return(invisible(NULL))
+        
+      }
+      
+    }else{
+      
+      creds[[h$team_name]][[h$user_id]] <- h
+      
+    }
+    
+  }else{
+    
+    creds[[h$team_name]] <- list()
+    creds[[h$team_name]][[h$user_id]] <- list()
+    webhookid <- basename(h$incoming_webhook$configuration_url)
+    creds[[h$team_name]][[h$user_id]][[webhookid]] <- h
+    
+  }
+  
+  jsonlite::write_json(creds,path = Sys.getenv('CREDS_PATH'))
+  
 }
 
 port <- Sys.getenv('PORT')
@@ -45,6 +47,4 @@ r <- plumber::plumb("/app/myfile.R")
 
 if(Sys.getenv("PORT") == "") Sys.setenv(PORT = 8000)
 
-r$run(host = "0.0.0.0", port=as.numeric(Sys.getenv("PORT")), swagger = TRUE)
-
-# r$run(host='0.0.0.0', port=strtoi(port),swagger = TRUE)
+r$run(host = "0.0.0.0", port=as.numeric(Sys.getenv("PORT")), swagger = FALSE)
