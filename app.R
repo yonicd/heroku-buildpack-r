@@ -1,11 +1,10 @@
 library(plumber)
 library(httr)
 library(jsonlite)
-
-library(processx)
 library(RPostgres)
 library(dbplyr)
 library(DBI)
+library(dplyr)
 
 connect_creds <- function(){
   
