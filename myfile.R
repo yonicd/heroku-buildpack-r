@@ -13,8 +13,8 @@ auth <- function(req,res){
 auth <- function(req,res){
 
   root <- 'https://slack.com/api/oauth.access'
-  root_redirect <- 'https://slackr-auth.herokuapp.com'
-  # root_redirect <- 'http://localhost:3000'
+  #root_redirect <- 'https://slackr-auth.herokuapp.com'
+  root_redirect <- 'http://localhost:3000'
   
   uri <- sprintf('%s?code=%s&client_id=%s&client_secret=%s&redirect_uri=%s',
                  root,
@@ -37,21 +37,47 @@ auth <- function(req,res){
     
   }else{
     
-    cred_key <- store_creds(h)
+    cred_key <- update_creds(h)
     
     list(
-      result = jsonlite::unbox('Success!'),
-      SLACKR_AUTH_KEY = jsonlite::unbox(cred_key)
+      key = jsonlite::unbox(cred_key),
+      userid = jsonlite::unbox(h$user_id)
     )
     
   }
   
 }
 
+#* creds
+#* @get /creds/<userid>/<key>
+creds <- function(userid, key, req, res){
+  
+  db_con <- connect_creds()
+  
+  on.exit(DBI::dbDisconnect(db_con),add = TRUE)
+  
+  db     <- dbplyr::src_dbi(db_con)
+  
+  creds_db <- dplyr::tbl(db, "CREDS")
+  
+  ret <- creds_db%>%
+    dplyr::filter(SLACK_KEY_ID==key&USER_ID==userid)%>%
+    dplyr::select(api_token = ACCESS_TOKEN,
+                  incoming_webhook_url = INCOMING_WEBHOOK_URL)%>%
+    dplyr::collect()%>%
+    as.list()
+  
+  lapply(ret,jsonlite::unbox)
+  
+}
+
+
 # Localhost
+# http://127.0.0.1:3000/creds/U6GMPP81H/965a8c62f782ef465fadfb52cf4bab3862eaa641
 # http://127.0.0.1:3000/auth
 # http://localhost:3000/auth/redirect
 # plumber::plumb(file='myfile.R')$run(port = 3000L,host = '0.0.0.0',swagger = FALSE)
 
 # Heroku
+# https://slackr-auth.herokuapp.com/creds/U6GMPP81H/965a8c62f782ef465fadfb52cf4bab3862eaa641
 # https://slackr-auth.herokuapp.com/auth/redirect

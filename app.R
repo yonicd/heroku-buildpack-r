@@ -2,25 +2,53 @@ library(plumber)
 library(httr)
 library(jsonlite)
 
-store_creds <- function(h){
+library(processx)
+library(RPostgres)
+library(dbplyr)
+library(DBI)
+
+connect_creds <- function(){
   
-  if(!file.exists(Sys.getenv('CREDS_PATH'))){
-    
-    creds <- list()
-    
-  }else{
-    
-    creds <- jsonlite::read_json(Sys.getenv('CREDS_PATH'))  
-    
-  }
-    
-  sh <- digest::sha1(h)
+  config <- processx::run(command = "heroku", 
+                          
+                          args = c("config:get", 
+                                   "DATABASE_URL", 
+                                   "-a", 
+                                   "slackr-auth")
+  )
   
-  creds[[sh]] <- h
+  pg     <- httr::parse_url(config$stdout)
   
-  jsonlite::write_json(creds,path = Sys.getenv('CREDS_PATH'))
+  DBI::dbConnect(drv      = RPostgres::Postgres(),
+                 dbname   = trimws(pg$path),
+                 host     = pg$hostname,
+                 port     = pg$port,
+                 user     = pg$username,
+                 password = pg$password,
+                 sslmode  = "require"
+  )
   
-  return(sh)
+}
+
+update_creds <- function(h){
+  
+  db_con <- connect_creds()
+  
+  on.exit(DBI::dbDisconnect(db_con),add = TRUE)
+  
+  db     <- dbplyr::src_dbi(db_con)
+  
+  dplyr::db_insert_into( con = db$con, table = "CREDS", values = get_to_creds(h))
+  
+  return(digest::sha1(h))
+}
+
+get_to_creds <- function(x){
+  
+  x <- append(list(SLACK_KEY_ID = digest::sha1(x)),x)
+  ret <- tibble::as_tibble(t(unlist(x,recursive = TRUE)))
+  names(ret) <- gsub('[.]','_',toupper(names(ret)))
+  ret
   
 }
 
