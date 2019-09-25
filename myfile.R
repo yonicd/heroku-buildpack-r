@@ -50,7 +50,7 @@ auth <- function(req,res){
 #* @get /creds/<memberid>/<key>
 creds <- function(memberid, key, req, res){
   
-  ret <- query_creds(memerid,key)
+  ret <- query_creds(memberid,key)
   
   ret_list <- as.list(ret)
 

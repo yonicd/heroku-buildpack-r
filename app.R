@@ -41,7 +41,7 @@ update_creds <- function(h){
   return(digest::sha1(h))
 }
 
-query_creds <- function(memerid,key){
+query_creds <- function(memberid,key){
   
   con <- connect_creds()
   
