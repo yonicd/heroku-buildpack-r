@@ -6,8 +6,7 @@
 ###########################################################
 # Update this line with the R packages to install:
 
-my_packages = c("plumber","httr","jsonlite","digest",
-                "RPostgres","dbplyr","DBI","dplyr")
+my_packages = c("plumber","httr","jsonlite","digest","RPostgres","DBI")
 
 ###########################################################
 

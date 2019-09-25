@@ -2,14 +2,23 @@ library(plumber)
 library(httr)
 library(jsonlite)
 library(RPostgres)
-library(dbplyr)
 library(DBI)
-library(dplyr)
 
-connect_creds <- function(){
+connect_creds <- function(db_url = Sys.getenv('DATABASE_URL')){
+
+  if(!nzchar(db_url)){
   
-  pg     <- httr::parse_url(Sys.getenv('DATABASE_URL'))
-  
+    config <- processx::run(
+      command = "heroku", 
+      args = c("config:get", "DATABASE_URL", "-a", "slackr-auth")
+    )
+    
+    db_url <- config$stdout
+    
+  }
+
+  pg     <- httr::parse_url(db_url)  
+    
   DBI::dbConnect(drv      = RPostgres::Postgres(),
                  dbname   = trimws(pg$path),
                  host     = pg$hostname,
@@ -23,22 +32,41 @@ connect_creds <- function(){
 
 update_creds <- function(h){
   
-  db_con <- connect_creds()
+  con <- connect_creds()
   
-  on.exit(DBI::dbDisconnect(db_con),add = TRUE)
-  
-  db     <- dbplyr::src_dbi(db_con)
-  
-  dplyr::db_insert_into( con = db$con, table = "CREDS", values = get_to_creds(h))
-  
+  on.exit(DBI::dbDisconnect(con),add = TRUE)
+
+  DBI::dbAppendTable(con,'CREDS',get_to_creds(h))
+
   return(digest::sha1(h))
+}
+
+query_creds <- function(memerid,key){
+  
+  con <- connect_creds()
+  
+  on.exit(DBI::dbDisconnect(con),add = TRUE)
+  
+  query_root <- paste('SELECT "ACCESS_TOKEN" AS "api_token"',
+                      '"INCOMING_WEBHOOK_URL" AS "incoming_webhook_url"',
+                      '"INCOMING_WEBHOOK_CHANNEL" AS "channel" FROM "CREDS"',
+                      sep = ', ')
+  
+  query <- sprintf('%s WHERE ("SLACK_KEY_ID" = %s AND "USER_ID" = %s)',
+                   query_root, shQuote(key),shQuote(memberid))
+  
+  ret <- DBI::dbGetQuery(con, query)
+  
 }
 
 get_to_creds <- function(x){
   
   x <- append(list(SLACK_KEY_ID = digest::sha1(x)),x)
-  ret <- tibble::as_tibble(t(unlist(x,recursive = TRUE)))
+  
+  ret <- data.frame(t(unlist(x,recursive = TRUE)),stringsAsFactors = FALSE)
+  
   names(ret) <- gsub('[.]','_',toupper(names(ret)))
+  
   ret
   
 }

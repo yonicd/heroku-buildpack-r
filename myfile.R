@@ -23,10 +23,11 @@ auth <- function(req,res){
                  Sys.getenv('SLACK_CLIENT_SECRET'),
                  sprintf('%s/auth/redirect',root_redirect))
   
-  ret <- httr::GET(url = uri,
-            encode = 'json',
-            body = FALSE,
-            httr::verbose()
+  ret <- httr::GET(
+    url = uri,
+    encode = 'json',
+    body = FALSE,
+    httr::verbose()
   )
 
   h <- httr::content(ret)
@@ -49,37 +50,21 @@ auth <- function(req,res){
 #* @get /creds/<memberid>/<key>
 creds <- function(memberid, key, req, res){
   
-  db_con <- connect_creds()
+  ret <- query_creds(memerid,key)
   
-  on.exit(DBI::dbDisconnect(db_con),add = TRUE)
-  
-  db     <- dbplyr::src_dbi(db_con)
-  
-  creds_db <- dplyr::tbl(db, "CREDS")
-  
-  ret <- creds_db%>%
-    dplyr::filter(SLACK_KEY_ID==key&USER_ID==memberid)%>%
-    dplyr::select(
-      api_token            = ACCESS_TOKEN,
-      incoming_webhook_url = INCOMING_WEBHOOK_URL,
-      channel              = INCOMING_WEBHOOK_CHANNEL)%>%
-    dplyr::collect()%>%
-    as.list()
-  
-  lapply(ret,jsonlite::unbox)
+  ret_list <- as.list(ret)
+
+  lapply(ret_list,jsonlite::unbox)
   
 }
 
 
 # Localhost
-# http://127.0.0.1:3000/creds/U6GMPP81H/965a8c62f782ef465fadfb52cf4bab3862eaa641
+# http://127.0.0.1:3000/creds/MEMBERID/SLACK_KEY_ID
 # http://127.0.0.1:3000/auth
 # http://localhost:3000/auth/redirect
 # plumber::plumb(file='myfile.R')$run(port = 3000L,host = '0.0.0.0',swagger = FALSE)
 
 # Heroku
-# https://slackr-auth.herokuapp.com/creds/U6GMPP81H/965a8c62f782ef465fadfb52cf4bab3862eaa641
+# https://slackr-auth.herokuapp.com/creds//MEMBERID/SLACK_KEY_ID
 # https://slackr-auth.herokuapp.com/auth/redirect
-
-# config <- processx::run(command = "heroku", args = c("config:get", "DATABASE_URL", "-a", "slackr-auth"))
-# pg     <- httr::parse_url(config$stdout)
