@@ -39,10 +39,7 @@ auth <- function(req,res){
     
     cred_key <- update_creds(h)
     
-    list(
-      key = jsonlite::unbox(cred_key),
-      userid = jsonlite::unbox(h$user_id)
-    )
+    list(SLACK_KEY_ID = jsonlite::unbox(cred_key))
     
   }
   
