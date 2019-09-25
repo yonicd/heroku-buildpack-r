@@ -13,8 +13,8 @@ auth <- function(req,res){
 auth <- function(req,res){
 
   root <- 'https://slack.com/api/oauth.access'
-  #root_redirect <- 'https://slackr-auth.herokuapp.com'
-  root_redirect <- 'http://localhost:3000'
+  root_redirect <- 'https://slackr-auth.herokuapp.com'
+  #root_redirect <- 'http://localhost:3000'
   
   uri <- sprintf('%s?code=%s&client_id=%s&client_secret=%s&redirect_uri=%s',
                  root,
