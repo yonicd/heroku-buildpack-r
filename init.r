@@ -3,6 +3,16 @@
 # See http://cran.r-project.org/doc/manuals/R-admin.html#Installing-packages for details
 #
 
+reset_packages <- function(lib){
+  
+  ip <- installed.packages()
+  pkgs.to.remove <- ip[!(ip[,"Priority"] %in% c("base", "recommended")), 1]
+  remove.packages(pkgs.to.remove,lib)  
+  
+}
+
+reset_packages(lib = .libPaths()[1])
+
 ###########################################################
 # Update this line with the R packages to install:
 
