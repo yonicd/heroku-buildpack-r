@@ -78,3 +78,6 @@ creds <- function(userid, key, req, res){
 # Heroku
 # https://slackr-auth.herokuapp.com/creds/U6GMPP81H/965a8c62f782ef465fadfb52cf4bab3862eaa641
 # https://slackr-auth.herokuapp.com/auth/redirect
+
+# config <- processx::run(command = "heroku", args = c("config:get", "DATABASE_URL", "-a", "slackr-auth"))
+# pg     <- httr::parse_url(config$stdout)

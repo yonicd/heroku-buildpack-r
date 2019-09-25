@@ -9,15 +9,7 @@ library(DBI)
 
 connect_creds <- function(){
   
-  config <- processx::run(command = "heroku", 
-                          
-                          args = c("config:get", 
-                                   "DATABASE_URL", 
-                                   "-a", 
-                                   "slackr-auth")
-  )
-  
-  pg     <- httr::parse_url(config$stdout)
+  pg     <- httr::parse_url(Sys.getenv('DATABASE_URL'))
   
   DBI::dbConnect(drv      = RPostgres::Postgres(),
                  dbname   = trimws(pg$path),
