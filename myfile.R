@@ -59,8 +59,10 @@ creds <- function(userid, key, req, res){
   
   ret <- creds_db%>%
     dplyr::filter(SLACK_KEY_ID==key&USER_ID==userid)%>%
-    dplyr::select(api_token = ACCESS_TOKEN,
-                  incoming_webhook_url = INCOMING_WEBHOOK_URL)%>%
+    dplyr::select(
+      api_token            = ACCESS_TOKEN,
+      incoming_webhook_url = INCOMING_WEBHOOK_URL,
+      channel              = INCOMING_WEBHOOK_CHANNEL)%>%
     dplyr::collect()%>%
     as.list()
   
