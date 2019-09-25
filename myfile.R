@@ -46,8 +46,8 @@ auth <- function(req,res){
 }
 
 #* creds
-#* @get /creds/<userid>/<key>
-creds <- function(userid, key, req, res){
+#* @get /creds/<memberid>/<key>
+creds <- function(memberid, key, req, res){
   
   db_con <- connect_creds()
   
@@ -58,7 +58,7 @@ creds <- function(userid, key, req, res){
   creds_db <- dplyr::tbl(db, "CREDS")
   
   ret <- creds_db%>%
-    dplyr::filter(SLACK_KEY_ID==key&USER_ID==userid)%>%
+    dplyr::filter(SLACK_KEY_ID==key&USER_ID==memberid)%>%
     dplyr::select(
       api_token            = ACCESS_TOKEN,
       incoming_webhook_url = INCOMING_WEBHOOK_URL,
