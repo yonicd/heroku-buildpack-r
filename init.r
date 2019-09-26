@@ -11,7 +11,7 @@ reset_packages <- function(lib){
   
 }
 
-reset_packages(lib = .libPaths()[1])
+# reset_packages(lib = .libPaths()[1])
 
 ###########################################################
 # Update this line with the R packages to install:
