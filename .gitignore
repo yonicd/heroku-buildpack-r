@@ -1,10 +1,12 @@
 .env
 *.log
 *.tar.gz
-*.html
 *.json
 .Rproj.user
 .Rhistory
 heroku-buildpack-r.Rproj
 bin_14
 .DS_Store
+*.html
+fetch_db.R
+
